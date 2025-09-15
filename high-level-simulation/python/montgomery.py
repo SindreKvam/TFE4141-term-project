@@ -61,7 +61,7 @@ def montgomery_modexp(M, e, n):
 
 
 if __name__ == "__main__":
-    word_size = 8
+    word_size = 256
     limbs = 4
 
     # Let R = 2^w
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # for n in range(33, r, 2):
     # if math.gcd(r, n) == 1:
     # break
-    n = 143
+    n = 0x008E4926DB131F8ADAFFD7806AF801E0CDB607DEA857441D059514F8E0D9CAEE01
     assert math.gcd(r, n) == 1
     assert n % 2 != 0
 
@@ -87,9 +87,14 @@ if __name__ == "__main__":
     # (n * n_0' + 1) mod R = 0
     assert (n * n_0_prime + 1) % r == 0
 
+    e = 0x10001
+    d = 0x2DFCDAC027F823EB1091D881BA52F1134E30FBBF6DCFCDA2343B7592D29F0001
+    original_message = 0x48656C6C6F2074686572652E2047656E6572616C204B656E6F62692E
 
-    # encoded = montgomery_modexp(7, 10, n)) # n=13, r=2^4 should return 4
-    encoded = montgomery_modexp(69, 7, n)
-    print(encoded)
-    decoded = montgomery_modexp(encoded, 103, n)
-    print(decoded)
+    print(f"Original message {hex(original_message)}")
+    encoded = montgomery_modexp(original_message, e, n)
+    print(f"Encoded message {hex(encoded)}")
+    decoded = montgomery_modexp(encoded, d, n)
+    print(f"Decoded message {hex(decoded)}")
+
+    assert original_message == decoded
