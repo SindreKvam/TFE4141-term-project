@@ -37,10 +37,6 @@ def rsa_calculation(X: int, e: int, n: int):
     return (X**e) % n
 
 
-def montgomery():
-    """Encrypt/Decrypt using Montgomerys method"""
-
-
 def encrypt_from_bytearray(
     message: bytearray,
     e: int,
