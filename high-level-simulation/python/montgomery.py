@@ -47,7 +47,7 @@ def montgomery_modexp(M, e, n):
     X = M^e mod n
     """
 
-    M_bar = M * r % n
+    M_bar = montgomery_monpro(M, (r * r) % n)
     x_bar = r % n
 
     binary_e = f"{e:b}".zfill(word_size)
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     # n^(-1) = x (mod R)
     # n_0' = -n^(-1) = -x (mod R)
     gcd, x, _ = gcd_extended_ensure_positive_x(n, r)
-    n_0_prime = -x
+    n_0_prime = r - x
 
     # Check if valid:
     # (n * n_0' + 1) mod R = 0
