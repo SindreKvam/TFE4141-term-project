@@ -4,6 +4,7 @@ struct RsaKeyValues {
     n_0_prime: i64,
     word_size: i64,
     r: i64,
+    r2_mod_n: i64,
     e: i64,
     d: i64,
 }
@@ -42,7 +43,7 @@ fn montgomery_monpro(a: i64, b: i64, key_values: &RsaKeyValues) -> i64 {
 }
 
 fn montgomery_modexp(m: i64, e: i64, key_values: &RsaKeyValues) -> i64 {
-    let m_bar = m * key_values.r % key_values.n;
+    let m_bar = montgomery_monpro(m, key_values.r2_mod_n, key_values);
     let mut x_bar = key_values.r % key_values.n;
 
     for n in (0..key_values.word_size).rev() {
@@ -57,7 +58,6 @@ fn montgomery_modexp(m: i64, e: i64, key_values: &RsaKeyValues) -> i64 {
 }
 
 fn main() {
-
     let word_size = 16;
 
     // Define constants to be used for calculating RSA
@@ -70,7 +70,7 @@ fn main() {
     assert_eq!(n % 2, 1);
 
     let (gcd, x, _) = gcd_ensure_positive_x(n, r);
-    let n_0_prime = -x;
+    let n_0_prime = r - x;
 
     // gcd(r,n) = 1
     assert_eq!(gcd, 1);
@@ -80,6 +80,7 @@ fn main() {
     let key_values = RsaKeyValues {
         r: r,
         n: n,
+        r2_mod_n: (r * r) % n,
         n_0_prime: n_0_prime,
         word_size: word_size,
         d: 103,
@@ -89,7 +90,7 @@ fn main() {
     println!("{:?}", key_values);
 
     let original_message = 130;
-    
+
     // Message cannot be larger than n
     assert!(original_message < n);
 
