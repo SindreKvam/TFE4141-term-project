@@ -99,8 +99,8 @@ if __name__ == "__main__":
     print(f"n' = {n_0_prime}")
     print(f"encryption key = {e}")
     print(f"decryption key = {d}")
-
     print(f"{'-' * 50}")
+
     print(f"Original message {hex(original_message)}")
     encoded = montgomery_modexp(original_message, e, n)
     print(f"Encoded message {hex(encoded)}")
