@@ -91,6 +91,16 @@ if __name__ == "__main__":
     d = 0x2DFCDAC027F823EB1091D881BA52F1134E30FBBF6DCFCDA2343B7592D29F0001
     original_message = 0x48656C6C6F2074686572652E2047656E6572616C204B656E6F62692E
 
+    print(f"{'-' * 50}")
+    print(f"R = {r}")
+    print(f"log2(R) = {int(math.log2(r))}")
+    print(f"R² mod n = {(r * r) % n}")
+    print(f"n = {n}")
+    print(f"n' = {n_0_prime}")
+    print(f"encryption key = {e}")
+    print(f"decryption key = {d}")
+
+    print(f"{'-' * 50}")
     print(f"Original message {hex(original_message)}")
     encoded = montgomery_modexp(original_message, e, n)
     print(f"Encoded message {hex(encoded)}")
