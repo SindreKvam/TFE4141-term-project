@@ -18,8 +18,6 @@ entity montgomery_monpro is
     --------------------------------------------------
         n : in std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
         n_prime : in std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
-        k : in std_logic_vector(GC_DATA_WIDTH - 1 downto 0); -- number of bits to shift down (log2 of k)
-        r : in std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
     --------------------------------------------------
     -- Outputs
     --------------------------------------------------
@@ -29,6 +27,8 @@ end entity montgomery_monpro;
 
 
 architecture rtl of montgomery_monpro is
+
+    constant r_minus_1 : unsigned(GC_DATA_WIDTH - 1 downto 0) := (others => '1');
     
     signal t : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
     signal m : unsigned(GC_DATA_WIDTH - 1 downto 0);
@@ -38,6 +38,7 @@ architecture rtl of montgomery_monpro is
 begin
 
     monpro_proc: process(clk)
+        variable v_m : unsigned(GC_DATA_WIDTH * 3 - 1 downto 0) := (others => '0');
     begin
 
         if rising_edge(clk) then
@@ -47,7 +48,8 @@ begin
             else
 
                 t <= unsigned(a) * unsigned(b);
-                m <= (t * unsigned(n_prime)) mod unsigned(r);
+                v_m := (t * unsigned(n_prime));
+                m <= v_m(GC_DATA_WIDTH - 1 downto 0) and r_minus_1;
                 u_pre <= (t + m * unsigned(n));
                 u_shift <= u_pre(u_pre'left downto GC_DATA_WIDTH);
 
