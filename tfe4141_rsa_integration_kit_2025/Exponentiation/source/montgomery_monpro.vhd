@@ -28,8 +28,6 @@ end entity montgomery_monpro;
 
 architecture rtl of montgomery_monpro is
 
-    constant r_minus_1 : unsigned(GC_DATA_WIDTH - 1 downto 0) := (others => '1');
-    
     signal t : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
     signal m : unsigned(GC_DATA_WIDTH - 1 downto 0);
     signal u_pre : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
@@ -49,7 +47,7 @@ begin
 
                 t <= unsigned(a) * unsigned(b);
                 v_m := (t * unsigned(n_prime));
-                m <= v_m(GC_DATA_WIDTH - 1 downto 0) and r_minus_1;
+                m <= v_m(GC_DATA_WIDTH - 1 downto 0);
                 u_pre <= (t + m * unsigned(n));
                 u_shift <= u_pre(u_pre'left downto GC_DATA_WIDTH);
 
