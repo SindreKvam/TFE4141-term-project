@@ -5,7 +5,7 @@ use IEEE.numeric_std.all;
 
 entity montgomery_monpro is
     generic(
-        GC_DATA_WIDTH : positive := 32
+        GC_DATA_WIDTH : integer := 16
     );
     port (
         clk : in std_logic;
