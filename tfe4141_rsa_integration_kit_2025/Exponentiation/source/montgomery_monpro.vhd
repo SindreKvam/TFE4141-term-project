@@ -40,15 +40,24 @@ begin
     monpro_proc: process(clk)
     begin
 
-        t <= unsigned(a) * unsigned(b);
-        m <= (t * unsigned(n_prime)) mod unsigned(r);
-        u_pre <= (t + m * unsigned(n));
-        u_shift <= u_pre(u_pre'left downto GC_DATA_WIDTH);
+        if rising_edge(clk) then
+            if rst_n = '0' then
+                u <= (others => '0');
 
-        if u_shift >= unsigned(n) then
-            u <= std_logic_vector(u_shift - unsigned(n));
-        else
-            u <= std_logic_vector(u_shift);
+            else
+
+                t <= unsigned(a) * unsigned(b);
+                m <= (t * unsigned(n_prime)) mod unsigned(r);
+                u_pre <= (t + m * unsigned(n));
+                u_shift <= u_pre(u_pre'left downto GC_DATA_WIDTH);
+
+                if u_shift >= unsigned(n) then
+                    u <= std_logic_vector(u_shift - unsigned(n));
+                else
+                    u <= std_logic_vector(u_shift);
+                end if;
+
+            end if;
         end if;
 
         
