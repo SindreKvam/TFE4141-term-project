@@ -121,8 +121,8 @@ u_rsa_regio : entity work.rsa_regio
 
 		key_e_d                 => key_e_d,
 		key_n                   => key_n,
-       key_n_prime             => key_n_prime,
-       key_r_squared_mod_n     => key_r_squared_mod_n,
+        key_n_prime             => key_n_prime,
+        key_r_squared_mod_n     => key_r_squared_mod_n,
 		rsa_status              => rsa_status,
 
 		S_AXI_ACLK              => clk,
@@ -227,8 +227,8 @@ u_rsa_core : entity work.rsa_core
 		-----------------------------------------------------------------------------
 		key_e_d                => key_e_d,
 		key_n                  => key_n,
-       key_n_prime            => key_n_prime,
-       key_r_squared_mod_n    => key_r_squared_mod_n,
+        key_n_prime            => key_n_prime,
+        key_r_squared_mod_n    => key_r_squared_mod_n,
 		rsa_status             => rsa_status
 
 	);
