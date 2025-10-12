@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # for n in range(33, r, 2):
     # if math.gcd(r, n) == 1:
     # break
-    n = 0x008E4926DB131F8ADAFFD7806AF801E0CDB607DEA857441D059514F8E0D9CAEE01
+    n = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
     assert math.gcd(r, n) == 1
     assert n % 2 != 0
 
@@ -87,9 +87,13 @@ if __name__ == "__main__":
     # (n * n_0' + 1) mod R = 0
     assert (n * n_0_prime + 1) % r == 0
 
-    e = 0x10001
-    d = 0x2DFCDAC027F823EB1091D881BA52F1134E30FBBF6DCFCDA2343B7592D29F0001
-    original_message = 0x48656C6C6F2074686572652E2047656E6572616C204B656E6F62692E
+    e = 0x0000000000000000000000000000000000000000000000000000000000010001
+    d = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
+    original_message = 0x0000000011111111222222223333333344444444555555556666666677777777
+
+    # With the keys and message that will be used for this LAB (as shown above)
+    # The expected cryptated message is:
+    # 0x23026c469918f5ea097f843dc5d5259192f9d3510415841ce834324f4c237ac7
 
     print(f"{'-' * 50}")
     print(f"R = {r}")
