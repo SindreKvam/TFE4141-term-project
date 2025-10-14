@@ -34,14 +34,14 @@ end montgomery_modexp ;
 
 architecture rtl of montgomery_modexp is
     -- make finite state machine
-    type FSM is (ST_IDLE, ST_CALC_M_BAR, ST_CALC_X_BAR_0, ST_CALC_X_BAR_1, ST_HOLD);
+    type FSM is (ST_IDLE, ST_LOAD_M_BAR, ST_CALC_M_BAR, ST_LOAD_C_BAR_0, ST_CALC_C_BAR_0, ST_LOAD_C_BAR_1, ST_CALC_C_BAR_1, ST_HOLD);
     signal state : FSM;
 
     --make internal signals
     signal a : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
     signal b : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
     signal M_bar : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
-    signal x_bar : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
+    signal C_bar : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
 
 	signal s_calc_counter : unsigned(7 downto 0);
 
@@ -59,10 +59,10 @@ begin
             clk => clk,
             rst_n => reset_n,
             --------------------------------------------------
-            in_valid => monpro_in_valid,
+            in_valid => monpro_in_valid, --left Monpro signals / right modexp signals
+            out_ready => monpro_out_ready,
             in_ready => monpro_in_ready,
             out_valid => monpro_out_valid,
-            out_ready => monpro_out_ready,
             --------------------------------------------------
             a => a,
             b => b,
@@ -72,49 +72,92 @@ begin
             --------------------------------------------------
             u => monpro_data
         );
+
+
+    --------------------    
     --starting process--
+    --------------------
     modexp_proc : process(clk)
 
-        variable v_in_valid : std_logic; --temporary monpro in valid
+        variable v_out_valid : std_logic; --temporary monpro in valid
         variable v_out_ready : std_logic; --variables are serial not concurrent--
 
     begin
         v_in_valid := '0';
-        v_out_ready := '0';
+        v_in_ready := '0';
 
     	if reset_n = '0' then
         	result <= (others => '0');
 			s_calc_counter <= (others => '0'); --resets counter--
+            state <= ST_IDLE;
 
       	elsif rising_edge(clk) then
             s_calc_counter <= s_calc_counter + 1;
+            ------------------------
             --finite state machine--
+            ------------------------
         	case state is
           	---------------------------
           	when ST_IDLE =>
           	---------------------------
-            	if valid_in = '1' then
-              		state <= ST_CALC_M_BAR;
+
+                v_out_ready := 1; -- ready to accept data
+                v_out_valid := 0; -- output is not ready
+
+            	if valid_in = '1' then -- when modexp has valid in change state
+              		state <= ST_LOAD_M_BAR;
             	end if;
+          	---------------------------
+          	when ST_LOAD_M_BAR =>
+          	---------------------------
+            	a <= M;
+            	b <= STD_LOGIC_VECTOR((unsigned(r) * unsigned(r)) mod unsigned(n)); 
+            	monpro_in_valid <= '1';                                             -- modexp a & b is loaded and ready for monpro                                           
+                if monpro_out_valid = '1' then
+                    state <= ST_CALC_M_BAR;
+				end if;
           	---------------------------
           	when ST_CALC_M_BAR =>
           	---------------------------
-            	a <= M;
-            	b <= STD_LOGIC_VECTOR((unsigned(r) * unsigned(r)) mod unsigned(n));
-                if s_calc_counter >= 2 then
-                    v_in_valid := '1';
+                monpro_in_ready <= '1';
+                monpro_in_valid <= '0';
+                M_bar <= monpro_data;
+
+                if monpro_out_ready = '1' then
+                    state <= ST_LOAD_C_BAR_0;
                 end if;
-            	if monpro_in_ready = '1' then
-                    monpro_in_valid <= '0';
-				end if;
           	---------------------------
-          	when ST_CALC_X_BAR_0 =>
+          	when ST_LOAD_C_BAR_0 =>
           	---------------------------
-          	---------------------------
-          	when ST_CALC_X_BAR_1 =>
-          	---------------------------
+                a <= std_logic_vector(1);
+                b <= std_logic_vector(unsigned(r)*unsigned(r)) mod unsigned(n);
+                monpro_in_valid <= '1';
+
+                if monpro_out_valid <= '1' then
+                    state <= ST_CALC_C_BAR_0;
+                end if;
+            ---------------------------
+            when ST_CALC_C_BAR_0 =>
+            ---------------------------
+                monpro_in_ready <= '1';
+                monpro_in_valid <= '0';
+                C_bar <= monpro_data;
+
+                if monpro_out_ready = '1' then
+                    state <= ST_LOAD_C_BAR_1;
+                end if; 
+
+
+            ---------------------------
+            when ST_HOLD =>
+                v_out_ready := 1;
+
+                if then
+                end if;
+            ---------------------------
         	end case;
-            
+            valid_out <= v_out_ready;
+
 
       	end if;
     end process;
