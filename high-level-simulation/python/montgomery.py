@@ -48,16 +48,16 @@ def montgomery_modexp(M, e, n):
     """
 
     M_bar = montgomery_monpro(M, (r * r) % n)
-    x_bar = r % n
+    C_bar = montgomery_monpro(1, (r * r) % n)
 
     binary_e = f"{e:b}".zfill(word_size)
     for bit in binary_e:
         bit = int(bit)
 
-        x_bar = montgomery_monpro(x_bar, x_bar)
+        C_bar = montgomery_monpro(C_bar, C_bar)
         if bit == 1:
-            x_bar = montgomery_monpro(M_bar, x_bar)
-    return montgomery_monpro(x_bar, 1)
+            C_bar = montgomery_monpro(M_bar, C_bar)
+    return montgomery_monpro(C_bar, 1)
 
 
 if __name__ == "__main__":
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # for n in range(33, r, 2):
     # if math.gcd(r, n) == 1:
     # break
-    n = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
+    n = 0x99925173AD65686715385EA800CD28120288FC70A9BC98DD4C90D676F8FF768D
     assert math.gcd(r, n) == 1
     assert n % 2 != 0
 
@@ -88,27 +88,31 @@ if __name__ == "__main__":
     assert (n * n_0_prime + 1) % r == 0
 
     e = 0x0000000000000000000000000000000000000000000000000000000000010001
-    d = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
-    original_message = 0x0000000011111111222222223333333344444444555555556666666677777777
+    d = 0x0CEA1651EF44BE1F1F1476B7539BED10D73E3AAC782BD9999A1E5A790932BFE9
+    original_message = (
+        0x0000000011111111222222223333333344444444555555556666666677777777
+    )
 
     # With the keys and message that will be used for this LAB (as shown above)
     # The expected cryptated message is:
     # 0x23026c469918f5ea097f843dc5d5259192f9d3510415841ce834324f4c237ac7
 
     print(f"{'-' * 50}")
-    print(f"R = {r}")
+    print(f"R = {hex(r)}")
     print(f"log2(R) = {int(math.log2(r))}")
-    print(f"R² mod n = {(r * r) % n}")
-    print(f"n = {n}")
-    print(f"n' = {n_0_prime}")
-    print(f"encryption key = {e}")
-    print(f"decryption key = {d}")
+    print(f"R² mod n = {hex((r * r) % n)}")
+    print(f"n = {hex(n)}")
+    print(f"n' = {hex(n_0_prime)}")
+    print(f"encryption key = {hex(e)}")
+    print(f"decryption key = {hex(d)}")
     print(f"{'-' * 50}")
 
     print(f"Original message {hex(original_message)}")
     encoded = montgomery_modexp(original_message, e, n)
     print(f"Encoded message {hex(encoded)}")
+    assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
     decoded = montgomery_modexp(encoded, d, n)
     print(f"Decoded message {hex(decoded)}")
+    assert decoded == original_message
 
     assert original_message == decoded
