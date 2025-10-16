@@ -214,7 +214,7 @@ begin
                 v_in_ready := '0';
                 v_out_valid := '1';
 
-                if ready_in = '1' then
+                if ready_out = '1' then
                     state <= ST_IDLE; --is this change to fast?
                 end if;
                 
