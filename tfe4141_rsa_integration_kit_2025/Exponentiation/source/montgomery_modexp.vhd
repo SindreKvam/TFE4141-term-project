@@ -81,7 +81,8 @@ begin
             n_prime => n_prime,
             --------------------------------------------------
             u => monpro_data
-        );
+    );
+
 
 
     --------------------    
@@ -90,11 +91,11 @@ begin
     modexp_proc : process(clk, reset_n)
 
         variable v_out_valid : std_logic; --temporary monpro in valid
-        variable v_out_ready : std_logic; --variables are serial not concurrent--
+        variable v_in_ready : std_logic; --variables are serial not concurrent--
 
     begin
         v_out_valid := '0';
-        v_out_ready := '0';
+        v_in_ready := '0';
 
     	if reset_n = '0' then
         	result <= (others => '0');
@@ -112,7 +113,7 @@ begin
           	when ST_IDLE =>
           	---------------------------
 
-                v_out_ready := '1'; -- ready to accept data
+                v_in_ready := '1'; -- ready to accept data
                 v_out_valid := '0'; -- output is not ready
                 
                 calc_type <= (others => '0');-- allways start new modexp with 0 --> M_bar <= monpro(1,(r*r)%n)
@@ -124,14 +125,14 @@ begin
           	---------------------------
           	when ST_LOAD =>
           	---------------------------
-                v_out_ready := '0';
+                v_in_ready := '0';
                 v_out_valid := '0';
 
-                monpro_in_ready <= '0';
+                monpro_out_ready <= '0';
                 monpro_in_valid <= '1'; --telling monpro there is data
                 
                 if calc_type = 0  then
-                    a <= std_logic_vector(to_unsigned(message, a'length)); -- puts value 1 into a
+                    a <= std_logic_vector(message); -- puts value 1 into a
                     b <= std_logic_vector((unsigned(r)*unsigned(r)) mod unsigned(n));
                 elsif calc_type = 1 then
                     a <= std_logic_vector(to_unsigned(1, a'length)); -- puts value 1 into a
@@ -157,10 +158,10 @@ begin
             ---------------------------    
           	when ST_CALC =>
             ---------------------------
-                v_out_ready := '0';
+                v_in_ready := '0';
                 v_out_valid := '0';
 
-                monpro_in_ready <= '1';
+                monpro_out_ready <= '1';
                 monpro_in_valid <= '0';
 
                 if calc_type = 0 then
@@ -210,7 +211,7 @@ begin
 
 
             when ST_HOLD =>
-                v_out_ready := '0';
+                v_in_ready := '0';
                 v_out_valid := '1';
 
                 if ready_in = '1' then
@@ -220,7 +221,7 @@ begin
             ---------------------------
         	end case;
             valid_out <= v_out_valid;
-            ready_out <= v_out_ready;
+            ready_in <= v_in_ready;
 
 
       	end if;
