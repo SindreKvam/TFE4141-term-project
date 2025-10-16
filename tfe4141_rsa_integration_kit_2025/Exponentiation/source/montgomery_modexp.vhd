@@ -211,6 +211,7 @@ begin
 
 
             when ST_HOLD =>
+                result <= monpro_data;-- for some reson we need to actually get the result....
                 v_in_ready := '0';
                 v_out_valid := '1';
 
