@@ -18,7 +18,8 @@ entity montgomery_modexp_tb is
 
         -- modulus values
         n : std_logic_vector := std_logic_vector(to_unsigned(143, C_block_size));
-        n_prime: std_logic_vector := std_logic_vector(to_unsigned(57745, C_block_size))
+        n_prime: std_logic_vector := std_logic_vector(to_unsigned(57745, C_block_size));
+        r_stuff: std_logic_vector := std_logic_vector(to_unsigned(48, C_block_size))
     );
 end montgomery_modexp_tb;
 
@@ -47,7 +48,7 @@ architecture sim of montgomery_modexp_tb is
     signal reset_n : std_logic := '1';
 
     --signals for push/pull logic of tb
-    signal ready_for_push : std_logic := '0';
+    signal ready_for_push : std_logic := '1';
 
     --utility function for writing std_logic_vectors to terminal
 
@@ -207,7 +208,8 @@ begin
         valid_out => valid_out,
         result => result,
         n => n,
-        n_prime => n_prime
+        n_prime => n_prime,
+        r_stuff => r_stuff
     );
 
     SEQUENCER_PROC : process
