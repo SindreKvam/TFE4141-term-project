@@ -1,48 +1,6 @@
 import math
-from dataclasses import dataclass
 
-
-@dataclass
-class RsaKeyValues:
-    n: int
-    n_0_prime: int
-    word_size: int
-    r: int
-    r2_mod_n: int
-
-    def __repr__(self):
-        a = "-" * 50 + "\n"
-        b = f"n: {hex(self.n)}\n"
-        b += f"n': {hex(self.n_0_prime)}\n"
-        b += f"word size: {self.word_size}\n"
-        b += f"r: {hex(self.r)}\n"
-        b += f"r² mod n: {hex(self.r2_mod_n)}\n"
-        return a + b + a
-
-
-def gcd_extended(a, b):
-    """Method for calculating the extended euclidean algorithm"""
-    # Base Case
-    if a == 0:
-        return b, 0, 1
-
-    gcd, x1, y1 = gcd_extended(b % a, a)
-
-    # Update x and y using results of recursive
-    # call
-    x = y1 - (b // a) * x1
-    y = x1
-
-    return gcd, x, y
-
-
-def gcd_extended_ensure_positive_x(a, b):
-    gcd, x, y = gcd_extended(a, b)
-
-    if x < 0:
-        x + b
-
-    return gcd, x, y
+from generate_rsa_key_values import RsaKeyValues, get_rsa_key_values
 
 
 def montgomery_monpro(a, b, key_values: RsaKeyValues):
@@ -81,40 +39,18 @@ def montgomery_modexp(M, e, n, key_values: RsaKeyValues):
 
 if __name__ == "__main__":
     word_size = 256
+    n = 0x99925173AD65686715385EA800CD28120288FC70A9BC98DD4C90D676F8FF768D
 
-    # Let R = 2^w
-    r = 1 << word_size
-
-    # Ensure gcd(r,n) = 1
-    n = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
-    assert math.gcd(r, n) == 1
-    assert n % 2 != 0
-
-    # Precompute n_0 = -n^(-1) (mod R)
-    # nx + Ry = gcd(n, R)
-    # nx = 1 (mod R)
-    # n^(-1) = x (mod R)
-    # n_0' = -n^(-1) = -x (mod R)
-    gcd, x, _ = gcd_extended_ensure_positive_x(n, r)
-    n_0_prime = r - x
-
-    # Check if valid:
-    # (n * n_0' + 1) mod R = 0
-    assert (n * n_0_prime + 1) % r == 0
+    rsa_key_values = get_rsa_key_values(n, word_size)
 
     e = 0x0000000000000000000000000000000000000000000000000000000000010001
-    d = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
-
-    rsa_key_values = RsaKeyValues(
-        r=r,
-        n=n,
-        n_0_prime=n_0_prime,
-        word_size=word_size,
-        r2_mod_n=((r * r) % n),
-    )
+    d = 0x0CEA1651EF44BE1F1F1476B7539BED10D73E3AAC782BD9999A1E5A790932BFE9
 
     print(rsa_key_values)
-    original_message = 0x0000000011111111222222223333333344444444555555556666666677777777
+
+    original_message = (
+        0x0000000011111111222222223333333344444444555555556666666677777777
+    )
 
     # With the keys and message that will be used for this LAB (as shown above)
     # The expected cryptated message is:
