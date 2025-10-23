@@ -1,4 +1,23 @@
 import math
+from dataclasses import dataclass
+
+
+@dataclass
+class RsaKeyValues:
+    n: int
+    n_0_prime: int
+    word_size: int
+    r: int
+    r2_mod_n: int
+
+    def __repr__(self):
+        a = "-" * 50 + "\n"
+        b = f"n: {hex(self.n)}\n"
+        b += f"n': {hex(self.n_0_prime)}\n"
+        b += f"word size: {self.word_size}\n"
+        b += f"r: {hex(self.r)}\n"
+        b += f"r² mod n: {hex(self.r2_mod_n)}\n"
+        return a + b + a
 
 
 def gcd_extended(a, b):
@@ -26,52 +45,48 @@ def gcd_extended_ensure_positive_x(a, b):
     return gcd, x, y
 
 
-def montgomery_monpro(a, b):
+def montgomery_monpro(a, b, key_values: RsaKeyValues):
     """
     Perform the montgomery mod multiplication
     All inputs are k-bit numbers
     """
     t = a * b
-    m = t * n_0_prime % r
+    m = t * key_values.n_0_prime % key_values.r
     # bitshift to the right instead of dividing by r
-    u = (t + m * n) >> int(math.log2(r))
+    u = (t + m * key_values.n) >> int(math.log2(key_values.r))
 
     if u >= n:
-        return u - n
+        return u - key_values.n
     return u
 
 
-def montgomery_modexp(M, e, n):
+def montgomery_modexp(M, e, n, key_values: RsaKeyValues):
     """
     Perform montgomery exponentiation to find the solution to
     X = M^e mod n
     """
 
-    M_bar = montgomery_monpro(M, (r * r) % n)
-    C_bar = montgomery_monpro(1, (r * r) % n)
+    M_bar = montgomery_monpro(M, key_values.r2_mod_n, key_values)
+    C_bar = montgomery_monpro(1, key_values.r2_mod_n, key_values)
 
     binary_e = f"{e:b}".zfill(word_size)
     for bit in binary_e:
         bit = int(bit)
 
-        C_bar = montgomery_monpro(C_bar, C_bar)
+        C_bar = montgomery_monpro(C_bar, C_bar, key_values)
         if bit == 1:
-            C_bar = montgomery_monpro(M_bar, C_bar)
-    return montgomery_monpro(C_bar, 1)
+            C_bar = montgomery_monpro(M_bar, C_bar, key_values)
+    return montgomery_monpro(C_bar, 1, key_values)
 
 
 if __name__ == "__main__":
-    word_size = 16
-    limbs = 4
+    word_size = 256
 
     # Let R = 2^w
     r = 1 << word_size
 
     # Ensure gcd(r,n) = 1
-    # for n in range(33, r, 2):
-    # if math.gcd(r, n) == 1:
-    # break
-    n = 143
+    n = 0x99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d
     assert math.gcd(r, n) == 1
     assert n % 2 != 0
 
@@ -82,38 +97,33 @@ if __name__ == "__main__":
     # n_0' = -n^(-1) = -x (mod R)
     gcd, x, _ = gcd_extended_ensure_positive_x(n, r)
     n_0_prime = r - x
-    print(f"n' is equal to: {n_0_prime}")
 
     # Check if valid:
     # (n * n_0' + 1) mod R = 0
     assert (n * n_0_prime + 1) % r == 0
 
-    e = 7
-    d = 103
-    original_message = (
-        0x0000
+    e = 0x0000000000000000000000000000000000000000000000000000000000010001
+    d = 0x0cea1651ef44be1f1f1476b7539bed10d73e3aac782bd9999a1e5a790932bfe9
+
+    rsa_key_values = RsaKeyValues(
+        r=r,
+        n=n,
+        n_0_prime=n_0_prime,
+        word_size=word_size,
+        r2_mod_n=((r * r) % n),
     )
+
+    print(rsa_key_values)
+    original_message = 0x0000000011111111222222223333333344444444555555556666666677777777
 
     # With the keys and message that will be used for this LAB (as shown above)
     # The expected cryptated message is:
     # 0x23026c469918f5ea097f843dc5d5259192f9d3510415841ce834324f4c237ac7
 
-    print(f"{'-' * 50}")
-    print(f"R = {hex(r)}")
-    print(f"log2(R) = {int(math.log2(r))}")
-    print(f"R² mod n = {hex((r * r) % n)}")
-    print(f"n = {hex(n)}")
-    print(f"n' = {hex(n_0_prime)}")
-    print(f"encryption key = {hex(e)}")
-    print(f"decryption key = {hex(d)}")
-    print(f"{'-' * 50}")
-
     print(f"Original message {hex(original_message)}")
-    encoded = montgomery_modexp(original_message, e, n)
+    encoded = montgomery_modexp(original_message, e, n, rsa_key_values)
     print(f"Encoded message {hex(encoded)}")
-    # assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
-    decoded = montgomery_modexp(encoded, d, n)
+    assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
+    decoded = montgomery_modexp(encoded, d, n, rsa_key_values)
     print(f"Decoded message {hex(decoded)}")
     assert decoded == original_message
-
-    assert original_message == decoded
