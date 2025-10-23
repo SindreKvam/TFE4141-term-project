@@ -1,4 +1,9 @@
+import logging
+
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 def carry_sum(a, x, y, b, width=16):
@@ -16,12 +21,19 @@ def carry_sum(a, x, y, b, width=16):
 
 def to_limbs(x, s, width) -> np.ndarray:
     """
-    Split x to 's' limbs
+    Split x to 's' limbs of width 'width'
     """
 
-    _arr = np.ndarray(shape=(width, s))
+    _arr = np.zeros(s)
+
+    bitmask = 2**width - 1
+
     for index, limb in enumerate(range(0, s * width, width)):
-        _arr[index] = limb
+        _arr[index] = (x & bitmask) >> limb
+
+        bitmask = bitmask << width
+
+    logger.debug(f"x: {x} to limbs: {_arr}")
 
     return _arr
 

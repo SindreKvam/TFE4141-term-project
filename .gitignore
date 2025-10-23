@@ -1,6 +1,16 @@
 # Rust output
 target
 
+# Python
+venv
+env
+.venv
+.env
+
+__pycache__
+.pytest_cache
+*.egg-info
+
 
 #########################################################################################
 ##  Project    : Collect of various scripts for working with EDA-tools (ASIC/FPGA/etc) ##
