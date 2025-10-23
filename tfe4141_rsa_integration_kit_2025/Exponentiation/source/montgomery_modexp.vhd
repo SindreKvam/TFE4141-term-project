@@ -13,7 +13,7 @@ entity montgomery_modexp is
 
 		--input data
 		message 	: in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
-		key 		: in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 );
+		key 		: in STD_LOGIC_VECTOR ( C_block_size-1 downto 0 ); -- e or d (encrypt or decrypt)
 
 		--ouput controll
 		ready_out	: in STD_LOGIC;
@@ -23,7 +23,8 @@ entity montgomery_modexp is
 		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		-- modulus
-		n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		r_stuff 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0); --r^2 % n precalculated 
+        n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
         n_prime : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--utility
@@ -132,10 +133,10 @@ begin
                 
                 if calc_type = 0  then
                     a <= std_logic_vector(message); -- puts value 1 into a
-                    b <= std_logic_vector((unsigned(r)*unsigned(r)) mod unsigned(n));
+                    b <= std_logic_vector(r_stuff);
                 elsif calc_type = 1 then
                     a <= std_logic_vector(to_unsigned(1, a'length)); -- puts value 1 into a
-                    b <= std_logic_vector((unsigned(r)*unsigned(r)) mod unsigned(n));
+                    b <= std_logic_vector(r_stuff);
                 elsif calc_type = 2 then
                     a <= C_bar;
                     b <= C_bar;
