@@ -15,3 +15,11 @@ def test_to_limbs(x: int, s: int, w: int):
 
     assert out[0] == (x & (2**w - 1))
     assert out.shape == (s,)
+
+
+def test_montgomery_monpro():
+    """Test the standard implementation of montgomery monpro"""
+
+
+def test_montgomery_monpro_cios():
+    """Test the CIOS implementation of the montgomery monpro algorithm"""
