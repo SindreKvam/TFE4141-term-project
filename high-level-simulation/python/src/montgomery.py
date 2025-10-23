@@ -13,7 +13,7 @@ def montgomery_monpro(a, b, key_values: RsaKeyValues):
     # bitshift to the right instead of dividing by r
     u = (t + m * key_values.n) >> int(math.log2(key_values.r))
 
-    if u >= n:
+    if u >= key_values.n:
         return u - key_values.n
     return u
 
@@ -27,7 +27,7 @@ def montgomery_modexp(M, e, n, key_values: RsaKeyValues):
     M_bar = montgomery_monpro(M, key_values.r2_mod_n, key_values)
     C_bar = montgomery_monpro(1, key_values.r2_mod_n, key_values)
 
-    binary_e = f"{e:b}".zfill(word_size)
+    binary_e = f"{e:b}".zfill(key_values.word_size)
     for bit in binary_e:
         bit = int(bit)
 
