@@ -6,3 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "montgomery-rsa-high-level"
 version = "0.1.0"
 dependencies = ["numpy", "pytest"]
+
+[project.scripts]
+generate-key-values = "generate_rsa_key_values:main"
