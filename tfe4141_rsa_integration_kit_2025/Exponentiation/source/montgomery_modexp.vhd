@@ -4,7 +4,7 @@ library ieee ;
 
 entity montgomery_modexp is
     generic (
-		C_block_size : integer := 256
+		C_block_size : integer := 16
 	);
 	port (
 		--input controll
@@ -23,8 +23,7 @@ entity montgomery_modexp is
 		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		-- modulus
-		r 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
-        n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
         n_prime : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
 
 		--utility

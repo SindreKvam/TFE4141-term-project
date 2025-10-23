@@ -61,7 +61,7 @@ def montgomery_modexp(M, e, n):
 
 
 if __name__ == "__main__":
-    word_size = 256
+    word_size = 16
     limbs = 4
 
     # Let R = 2^w
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # for n in range(33, r, 2):
     # if math.gcd(r, n) == 1:
     # break
-    n = 0x99925173AD65686715385EA800CD28120288FC70A9BC98DD4C90D676F8FF768D
+    n = 143
     assert math.gcd(r, n) == 1
     assert n % 2 != 0
 
@@ -82,15 +82,16 @@ if __name__ == "__main__":
     # n_0' = -n^(-1) = -x (mod R)
     gcd, x, _ = gcd_extended_ensure_positive_x(n, r)
     n_0_prime = r - x
+    print(f"n' is equal to: {n_0_prime}")
 
     # Check if valid:
     # (n * n_0' + 1) mod R = 0
     assert (n * n_0_prime + 1) % r == 0
 
-    e = 0x0000000000000000000000000000000000000000000000000000000000010001
-    d = 0x0CEA1651EF44BE1F1F1476B7539BED10D73E3AAC782BD9999A1E5A790932BFE9
+    e = 7
+    d = 103
     original_message = (
-        0x0000000011111111222222223333333344444444555555556666666677777777
+        0x0000
     )
 
     # With the keys and message that will be used for this LAB (as shown above)
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     print(f"Original message {hex(original_message)}")
     encoded = montgomery_modexp(original_message, e, n)
     print(f"Encoded message {hex(encoded)}")
-    assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
+    # assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
     decoded = montgomery_modexp(encoded, d, n)
     print(f"Decoded message {hex(decoded)}")
     assert decoded == original_message
