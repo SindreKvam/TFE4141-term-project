@@ -87,8 +87,6 @@ def get_rsa_key_values(n, word_size: int, limb_size: int = 1) -> RsaKeyValues:
 
     k = word_size * limb_size
 
-    assert k == word_size
-
     # R = 2^k
     r = 1 << k
 
