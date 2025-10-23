@@ -25,7 +25,7 @@ end montgomery_modexp_tb;
 
 architecture sim of montgomery_modexp_tb is
 
-    constant clk_hz : integer := 100e6;
+    constant clk_hz : integer := 10e6;
     constant clk_period : time := 1 sec / clk_hz;
 
     --input control
@@ -45,7 +45,7 @@ architecture sim of montgomery_modexp_tb is
     
     --utility
     signal clk : std_logic := '0';
-    signal reset_n : std_logic := '1';
+    signal reset_n : std_logic := '0';
 
     --signals for push/pull logic of tb
     signal ready_for_push : std_logic := '1';
@@ -106,21 +106,29 @@ architecture sim of montgomery_modexp_tb is
     end generate_test_messages;
 
 begin
-
     --Clock generation
     clk <= not clk after clk_period / 2;
+
+    reset_gen: process is
+    begin
+        generate_test_messages(message_i => testMessages);
+        reset_n <= '0';
+        wait for clk_period;
+        reset_n <= '1';
+        wait;
+    end process;
 
     --Pushing data to data_in
     datapusher: process is
     begin
         wait for 60 ns;
-        --make sure puller is finished before we can push more messages
-        if (ready_for_push = '0') then
-            wait until rising_edge(ready_for_push);
-        end if;
 
         wait until rising_edge(clk);
         write_all : for i in 3 downto 0 loop
+            --make sure puller is finished before we can push more messages
+            if (ready_for_push = '0') then
+                wait until rising_edge(ready_for_push);
+            end if;
             message <= testMessages(i);
             key <= e;
             valid_in <= '1';
@@ -141,55 +149,55 @@ begin
     end process datapusher;
 
     --pulling result
-    datapuller : process is
-        variable readout : std_logic_vector(C_block_size - 1 downto 0);
-    begin
-        wait for 60 ns;
-        wait until rising_edge(clk);
-        readout_all : for i in 3 downto 0 loop
-            ready_out <= '1';
-            if (valid_out = '0') then
-                wait until rising_edge(valid_out);
-            end if;
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
-            ready_out <= '0';
+    -- datapuller : process is
+    --     variable readout : std_logic_vector(C_block_size - 1 downto 0);
+    -- begin
+    --     wait for 60 ns;
+    --     wait until rising_edge(clk);
+    --     readout_all : for i in 3 downto 0 loop
+    --         ready_out <= '1';
+    --         if (valid_out = '0') then
+    --             wait until rising_edge(valid_out);
+    --         end if;
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
+    --         ready_out <= '0';
             
-            --put encrypted message back into circuit for decryption
-            message <= result;
-            key <= d;
-            valid_in <= '1';
-            if (ready_in = '0') then
-                wait until rising_edge(ready_in);
-            end if;
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
-            valid_in <= '0';
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
+    --         --put encrypted message back into circuit for decryption
+    --         message <= result;
+    --         key <= d;
+    --         valid_in <= '1';
+    --         if (ready_in = '0') then
+    --             wait until rising_edge(ready_in);
+    --         end if;
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
+    --         valid_in <= '0';
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
 
-            ready_out <= '1';
-            if (valid_out = '0') then
-                wait until rising_edge(valid_out);
-            end if;
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
+    --         ready_out <= '1';
+    --         if (valid_out = '0') then
+    --             wait until rising_edge(valid_out);
+    --         end if;
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
 
-            ready_out <= '0';
-            readout := result;
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
+    --         ready_out <= '0';
+    --         readout := result;
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
 
-            --tell pusher it can send a new message
-            ready_for_push <= '1';
+    --         --tell pusher it can send a new message
+    --         ready_for_push <= '1';
 
-            -- assert testMessages(i) = readout;
-            --     report "Incorrect result: test " & integer'image(i) & " expected [" & stdvec_to_string(message(i)) & "] got [" & stdvec_to_string(readout) & "]"
-            --         severity failure;
+    --         -- assert testMessages(i) = readout;
+    --         --     report "Incorrect result: test " & integer'image(i) & " expected [" & stdvec_to_string(message(i)) & "] got [" & stdvec_to_string(readout) & "]"
+    --         --         severity failure;
 
-        end loop readout_all;
+    --     end loop readout_all;
 
-    end process datapuller;
+    -- end process datapuller;
 
     DUT : entity work.montgomery_modexp(rtl)
 
@@ -212,18 +220,18 @@ begin
         r_stuff => r_stuff
     );
 
-    SEQUENCER_PROC : process
-    begin
-        wait for clk_period * 2;
+    -- SEQUENCER_PROC : process
+    -- begin
+    --     wait for clk_period * 2;
 
-        reset_n <= '1';
+    --     reset_n <= '1';
 
-        wait for clk_period * 10;
-        assert false
-            report "Replace this with your test cases"
-            severity failure;
+    --     wait for clk_period * 10;
+    --     assert false
+    --         report "Replace this with your test cases"
+    --         severity failure;
 
-        finish;
-    end process;
+    --     finish;
+    -- end process;
 
 end architecture;
