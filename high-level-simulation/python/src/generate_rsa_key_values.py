@@ -14,6 +14,7 @@ class RsaKeyValues:
     n_0_prime: int
     word_size: int
     r: int
+    r_inv: int
     r2_mod_n: int
 
     def __repr__(self):
@@ -22,6 +23,7 @@ class RsaKeyValues:
         b += f"n': {hex(self.n_0_prime)}\n"
         b += f"word size: {self.word_size}\n"
         b += f"r: {hex(self.r)}\n"
+        b += f"r⁻¹: {hex(self.r_inv)}\n"
         b += f"r² mod n: {hex(self.r2_mod_n)}\n"
         return a + b + a
 
@@ -94,7 +96,7 @@ def get_rsa_key_values(n, word_size: int, limb_size: int = 1) -> RsaKeyValues:
     assert n % 2 != 0
     assert math.gcd(r, n) == 1
 
-    gcd, x, _ = gcd_extended_ensure_positive_x(n, r)
+    gcd, x, r_inv = gcd_extended_ensure_positive_x(n, r)
     n_0_prime = r - x
 
     assert (n * n_0_prime + 1) % r == 0
@@ -106,6 +108,7 @@ def get_rsa_key_values(n, word_size: int, limb_size: int = 1) -> RsaKeyValues:
         n_0_prime=n_0_prime,
         word_size=word_size,
         r=r,
+        r_inv=r_inv,
         r2_mod_n=r2_mod_n,
     )
 
