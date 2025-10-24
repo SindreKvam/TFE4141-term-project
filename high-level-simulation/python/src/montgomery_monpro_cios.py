@@ -42,6 +42,15 @@ def to_limbs(x, s, width) -> np.ndarray:
 def montgomery_monpro_cios(a, b, R, w, s, p, p_prime):
     """
     Perform the montgomery mod multiplication using the CIOS algorithm
+
+    a * b * R^(-1) mod p
+
+    Arguments:
+        - a: input 1
+        - b: input 2
+        - R: 2 ^ K (where K = w*s)
+        - w: word size
+        - s: number of words
     """
 
     # K = s * w
