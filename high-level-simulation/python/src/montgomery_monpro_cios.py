@@ -7,13 +7,13 @@ from generate_rsa_key_values import RsaKeyValues, get_rsa_key_values
 logger = logging.getLogger(__name__)
 
 
-def carry_sum(a, x, y, b, width=16):
+def carry_sum(a: int, x: int, y: int, b: int, width=16):
     """
     Calculate carry and sum from a + x*y + b
     """
 
     bitmask = (1 << width) - 1
-    calculated_value = a + x * y + b
+    calculated_value = int(a + x * y + b)
     s = calculated_value & bitmask
     c = calculated_value >> width
 
@@ -25,7 +25,7 @@ def to_limbs(x, s, width) -> np.ndarray:
     Split x to 's' limbs of width 'width'
     """
 
-    _arr = np.zeros(s)
+    _arr = np.zeros(s, dtype=int)
 
     bitmask = 2**width - 1
 
@@ -34,7 +34,8 @@ def to_limbs(x, s, width) -> np.ndarray:
 
         bitmask = bitmask << width
 
-    logger.debug(f"x: {x} to limbs: {_arr}")
+    _arr = _arr[::-1]
+    logger.debug(f"x: {hex(x)} to limbs: {[hex(val) for val in _arr]}")
 
     return _arr
 

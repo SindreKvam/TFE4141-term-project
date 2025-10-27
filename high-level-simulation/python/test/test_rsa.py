@@ -40,3 +40,8 @@ def test_rsa_montgomery():
     # Then the expected encrypted message is:
     assert encoded == EXPECTED_ENCODED
     assert original_message == decoded
+
+
+def test_rsa_montgomery_cios():
+    """Test RSA with montgomery modexp algorithm
+    using CIOS monthomery monpro algorithm"""
