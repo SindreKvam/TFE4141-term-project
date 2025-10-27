@@ -78,23 +78,23 @@ def montgomery_monpro_cios(a, b, w, s, n, n_prime):
         C = 0
 
         for j in range(s):
-            C, S = carry_sum(T[j], a[i], b[j], C, width=w)
-            T[j] = S
+            C, T[j] = carry_sum(T[j], a[j], b[i], C, width=w)
 
-        C, S = carry_sum(T[s], 0, 0, C, width=w)
-        T[s] = S
-        T[s + 1] = C
+        T[s + 1], T[s] = carry_sum(T[s], 0, 0, C, width=w)
 
         C = 0
         m = int(T[0] * n_prime[0]) & BITMASK  # AND instead of modulo 2^w
-        C, S = carry_sum(T[0], m, n[0], 0, width=w)
-        for j in range(1, s):
-            C, S = carry_sum(T[j], m, n[j], C, width=w)
-            T[j - 1] = S
 
-        C, S = carry_sum(T[s], 0, 0, C, width=w)
-        T[s - 1] = S
+        C, _ = carry_sum(T[0], m, n[0], 0, width=w)
+        for j in range(1, s):
+            C, T[j - 1] = carry_sum(T[j], m, n[j], C, width=w)
+
+        C, T[s - 1] = carry_sum(T[s], 0, 0, C, width=w)
         T[s] = T[s + 1] + C
+
+    if from_limbs(T, w) >= from_limbs(n, w):
+        T_int = int(from_limbs(T, w)) - from_limbs(n, w)
+        T = to_limbs(T_int, s, w)
 
     return T
 
@@ -105,24 +105,29 @@ def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
     X = M^e mod n
     """
 
-    M_bar = montgomery_monpro_cios(
-        M, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
+    k = w * s
+
+    M_bar = from_limbs(
+        montgomery_monpro_cios(M, key_values.r2_mod_n, w, s, n, key_values.n_0_prime), w
     )
-    C_bar = montgomery_monpro_cios(
-        1, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
+    C_bar = from_limbs(
+        montgomery_monpro_cios(1, key_values.r2_mod_n, w, s, n, key_values.n_0_prime), w
     )
 
-    binary_e = f"{e:b}".zfill(key_values.word_size)
+    binary_e = f"{e:b}".zfill(k)
     for bit in binary_e:
         bit = int(bit)
 
-        print(bit)
-
-        C_bar = montgomery_monpro_cios(C_bar, C_bar, w, s, n, key_values.n_0_prime)
+        C_bar = from_limbs(
+            montgomery_monpro_cios(C_bar, C_bar, w, s, n, key_values.n_0_prime), w
+        )
         if bit == 1:
-            C_bar = montgomery_monpro_cios(M_bar, C_bar, w, s, n, key_values.n_0_prime)
-
-    return montgomery_monpro_cios(C_bar, 1, w, s, n, key_values.n_0_prime)
+            C_bar = from_limbs(
+                montgomery_monpro_cios(M_bar, C_bar, w, s, n, key_values.n_0_prime), w
+            )
+    return from_limbs(
+        montgomery_monpro_cios(C_bar, 1, w, s, n, key_values.n_0_prime), w
+    )
 
 
 if __name__ == "__main__":
@@ -147,5 +152,9 @@ if __name__ == "__main__":
         original_message, e, n, word_size, num_limbs, rsa_key_values
     )
     decoded = montgomery_modexp(encoded, d, n, word_size, num_limbs, rsa_key_values)
+
+    print(f"Original message: {hex(original_message)}")
+    print(f"Encoded message: {hex(encoded)}")
+    print(f"Decoded message: {hex(decoded)}")
 
     assert decoded == original_message

@@ -32,6 +32,11 @@ def key_values() -> RsaKeyValues:
         (LAB_MESSAGE, 256, 1),
         (LAB_MESSAGE, 128, 2),
         (LAB_MESSAGE, 16, 16),
+        (
+            0x73D53F95B4325E7CFAD52F428ECA37D8ACDF13C0DCA05CCAEA42DB7051457988,
+            16,
+            16,
+        ),
     ],
 )
 def test_to_limbs(x: int, s: int, w: int):
@@ -53,6 +58,11 @@ def test_to_limbs(x: int, s: int, w: int):
         (0xDEAD, 4, 4),
         (0xDEAD, 8, 2),
         (0xDEAD, 2, 8),
+        (
+            0x73D53F95B4325E7CFAD52F428ECA37D8ACDF13C0DCA05CCAEA42DB7051457988,
+            16,
+            16,
+        ),
     ],
 )
 def test_from_limbs(x: int, s: int, w: int):
@@ -124,3 +134,46 @@ def test_montgomery_monpro_cios(a, b, w, s):
     logger.info(f"expected montgomery product: {hex(expected_ans)}")
 
     assert ans == expected_ans
+
+
+@pytest.mark.parametrize(
+    "a, b, w, s",
+    [
+        (0xBADEBABE, 0xDEADBEEF, 16, 16),
+        (0xBADEBABE, 0xDEADBEEF, 8, 32),
+        (0xDEAD, 0xBEEF, 16, 16),
+        (0xDEAD, 0xBEEF, 8, 32),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 16, 16),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 8, 32),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 4, 64),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 2, 128),
+        (
+            0x73D53F95B4325E7CFAD52F428ECA37D8ACDF13C0DCA05CCAEA42DB7051457988,
+            0x73D53F95B4325E7CFAD52F428ECA37D8ACDF13C0DCA05CCAEA42DB7051457988,
+            16,
+            16,
+        ),
+    ],
+)
+def test_compare_monpro_methods(a, b, w, s):
+    """Compare results of multiple monpro implementations"""
+    assert w * s == 256
+
+    key_values = get_rsa_key_values(KEY_N, 256)
+    key_values_cios = get_rsa_key_values(KEY_N, w, s)
+
+    ans = montgomery_monpro(a, b, key_values)
+    ans_cios = from_limbs(
+        montgomery_monpro_cios(
+            a, b, w, s, key_values_cios.n, key_values_cios.n_0_prime
+        ),
+        w,
+    )
+
+    expected_ans = (a * b * key_values.r_inv) % key_values.n
+
+    logger.info(f"MonPro answer: {hex(ans)}")
+    logger.info(f"MonPro CIOS answer: {hex(ans_cios)}")
+    logger.info(f"Expected answer: {hex(expected_ans)}")
+
+    assert expected_ans == ans == ans_cios
