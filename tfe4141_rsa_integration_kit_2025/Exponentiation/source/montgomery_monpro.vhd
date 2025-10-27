@@ -44,7 +44,6 @@ architecture rtl of montgomery_monpro is
 
     signal t : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
     signal m : unsigned(GC_DATA_WIDTH - 1 downto 0);
-    signal u_pre : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
     signal u_shift : unsigned(GC_DATA_WIDTH - 1 downto 0);
 
     type FSM is (ST_IDLE, ST_CALC, ST_HOLD);
@@ -59,12 +58,16 @@ begin
         variable v_out_valid : std_logic;
         variable v_in_ready : std_logic;
 
+        variable v_u_pre : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0) := (others => '0');
+
     begin
 
         v_m := (others => '0');
 
         v_out_valid := '0';
         v_in_ready := '0';
+
+        v_u_pre := (others => '0');
 
         if rst_n = '0' then
 
@@ -102,8 +105,8 @@ begin
                     m <= v_m(GC_DATA_WIDTH - 1 downto 0);
 
                     -- rest is calculated on the third clock-cycle (dependent on m and t)
-                    u_pre <= (t + m * unsigned(n));
-                    u_shift <= u_pre(u_pre'left downto GC_DATA_WIDTH);
+                    v_u_pre := (t + m * unsigned(n));
+                    u_shift <= v_u_pre(v_u_pre'left downto GC_DATA_WIDTH);
 
                     -- Output should be ready after 4 clock cycles
                     if u_shift >= unsigned(n) then
