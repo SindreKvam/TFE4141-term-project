@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 
 from generate_rsa_key_values import get_rsa_key_values, RsaKeyValues
-from montgomery_monpro_cios import to_limbs, montgomery_monpro_cios
+from montgomery_monpro_cios import to_limbs, from_limbs, montgomery_monpro_cios
 from montgomery import montgomery_monpro
 
 from key_values import KEY_N, KEY_D, KEY_E, LAB_MESSAGE, EXPECTED_ENCODED
@@ -45,6 +45,25 @@ def test_to_limbs(x: int, s: int, w: int):
 
     assert out[0] == (x & (2**w - 1))
     assert out.shape == (s,)
+
+
+@pytest.mark.parametrize(
+    "x, s, w",
+    [
+        (0xDEAD, 4, 4),
+        (0xDEAD, 8, 2),
+        (0xDEAD, 2, 8),
+    ],
+)
+def test_from_limbs(x: int, s: int, w: int):
+    """Check if we successfully return a split value back into the correct integer"""
+
+    limbs = to_limbs(x, s, w)
+    value = from_limbs(limbs, w)
+
+    logger.debug(f"Input was: {hex(x)}, to and back from limbs: {hex(value)}")
+
+    assert x == value
 
 
 @pytest.mark.parametrize(
@@ -94,22 +113,14 @@ def test_montgomery_monpro_cios(a, b, w, s):
     key_values = get_rsa_key_values(KEY_N, w, s)
 
     logger.info("Running test with CIOS implementation")
-
     logger.info(f"Calculating {hex(a)} * {hex(b)} mod {hex(key_values.n)}")
 
-    a_split = to_limbs(a, s, w)
-    b_split = to_limbs(b, s, w)
-    n = to_limbs(key_values.n, s, w)
-    n_prime = to_limbs(key_values.n_0_prime, s, w)
+    ans = montgomery_monpro_cios(a, b, w, s, key_values.n, key_values.n_0_prime)
+    ans = from_limbs(ans, w)
 
-    ans = montgomery_monpro_cios(a_split, b_split, w, s, n, n_prime)
     expected_ans = (a * b * key_values.r_inv) % key_values.n
-    expected_ans = to_limbs(expected_ans, s, w)
 
-    logger.info(f"montgomery product: {[hex(int(a)) for a in ans]}")
-    logger.info(f"expected montgomery product: {[hex(int(a)) for a in expected_ans]}")
+    logger.info(f"montgomery product: {hex(ans)}")
+    logger.info(f"expected montgomery product: {hex(expected_ans)}")
 
-    assert np.sum(
-        [ans[i] == expected_ans[i] for i in range(len(expected_ans))],
-        dtype=int,
-    ) == len(expected_ans)
+    assert ans == expected_ans

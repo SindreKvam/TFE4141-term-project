@@ -39,6 +39,18 @@ def to_limbs(x, s, width) -> np.ndarray:
     return _arr
 
 
+def from_limbs(x: np.ndarray, width: int) -> int:
+    """Turn splitted x back into integer"""
+
+    _value = 0
+
+    for limb in x[::-1]:
+        _value <<= width
+        _value |= int(limb)
+
+    return _value
+
+
 def montgomery_monpro_cios(a, b, w, s, n, n_prime):
     """
     Perform the montgomery mod multiplication using the CIOS algorithm
@@ -51,6 +63,11 @@ def montgomery_monpro_cios(a, b, w, s, n, n_prime):
         - w: word size
         - s: number of words
     """
+
+    a = to_limbs(a, s, w)
+    b = to_limbs(b, s, w)
+    n = to_limbs(n, s, w)
+    n_prime = to_limbs(n_prime, s, w)
 
     BITMASK = (1 << w) - 1
 
@@ -82,24 +99,30 @@ def montgomery_monpro_cios(a, b, w, s, n, n_prime):
     return T
 
 
-def montgomery_modexp(M, e, n, key_values: RsaKeyValues):
+def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
     """
     Perform montgomery exponentiation to find the solution to
     X = M^e mod n
     """
 
-    M_bar = montgomery_monpro_cios(M, key_values.r2_mod_n, key_values)
-    C_bar = montgomery_monpro_cios(1, key_values.r2_mod_n, key_values)
+    M_bar = montgomery_monpro_cios(
+        M, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
+    )
+    C_bar = montgomery_monpro_cios(
+        1, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
+    )
 
     binary_e = f"{e:b}".zfill(key_values.word_size)
     for bit in binary_e:
         bit = int(bit)
 
-        C_bar = montgomery_monpro_cios(C_bar, C_bar, key_values)
-        if bit == 1:
-            C_bar = montgomery_monpro_cios(M_bar, C_bar, key_values)
+        print(bit)
 
-    return montgomery_monpro_cios(C_bar, 1, key_values)
+        C_bar = montgomery_monpro_cios(C_bar, C_bar, w, s, n, key_values.n_0_prime)
+        if bit == 1:
+            C_bar = montgomery_monpro_cios(M_bar, C_bar, w, s, n, key_values.n_0_prime)
+
+    return montgomery_monpro_cios(C_bar, 1, w, s, n, key_values.n_0_prime)
 
 
 if __name__ == "__main__":
@@ -116,13 +139,13 @@ if __name__ == "__main__":
 
     print(rsa_key_values)
 
-    original_message = to_limbs(
-        0x0000000011111111222222223333333344444444555555556666666677777777,
-        num_limbs,
-        word_size,
+    original_message = (
+        0x0000000011111111222222223333333344444444555555556666666677777777
     )
 
-    encoded = montgomery_modexp(original_message, e, n, rsa_key_values)
-    decoded = montgomery_modexp(encoded, d, n, rsa_key_values)
+    encoded = montgomery_modexp(
+        original_message, e, n, word_size, num_limbs, rsa_key_values
+    )
+    decoded = montgomery_modexp(encoded, d, n, word_size, num_limbs, rsa_key_values)
 
     assert decoded == original_message
