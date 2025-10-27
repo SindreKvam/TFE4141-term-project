@@ -34,17 +34,16 @@ def to_limbs(x, s, width) -> np.ndarray:
 
         bitmask = bitmask << width
 
-    _arr = _arr[::-1]
     logger.debug(f"x: {hex(x)} to limbs: {[hex(val) for val in _arr]}")
 
     return _arr
 
 
-def montgomery_monpro_cios(a, b, R, w, s, p, p_prime):
+def montgomery_monpro_cios(a, b, R, w, s, n, n_prime):
     """
     Perform the montgomery mod multiplication using the CIOS algorithm
 
-    a * b * R^(-1) mod p
+    a * b * R^(-1) mod n
 
     Arguments:
         - a: input 1
@@ -54,7 +53,7 @@ def montgomery_monpro_cios(a, b, R, w, s, p, p_prime):
         - s: number of words
     """
 
-    # K = s * w
+    BITMASK = (1 << w) - 1
 
     # Create array T to store all intermediate results
     T = np.zeros(s + 2)
@@ -71,12 +70,11 @@ def montgomery_monpro_cios(a, b, R, w, s, p, p_prime):
         T[s + 1] = C
 
         C = 0
-        m = T[0] * p_prime % 2**w
-        C, S = carry_sum(T[0], m, p[0], 0, width=w)
-
+        m = int(T[0] * n_prime[0]) & BITMASK  # AND instead of modulo 2^w
+        C, S = carry_sum(T[0], m, n[0], 0, width=w)
         for j in range(1, s):
-            C, S = carry_sum(T[j], m, p[j], C, width=w)
-            T[j] = S
+            C, S = carry_sum(T[j], m, n[j], C, width=w)
+            T[j - 1] = S
 
         C, S = carry_sum(T[s], 0, 0, C, width=w)
         T[s - 1] = S
