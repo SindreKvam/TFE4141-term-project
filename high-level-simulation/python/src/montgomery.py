@@ -56,10 +56,12 @@ if __name__ == "__main__":
     # The expected cryptated message is:
     # 0x23026c469918f5ea097f843dc5d5259192f9d3510415841ce834324f4c237ac7
 
-    print(f"Original message {hex(original_message)}")
     encoded = montgomery_modexp(original_message, e, n, rsa_key_values)
-    print(f"Encoded message {hex(encoded)}")
-    assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
     decoded = montgomery_modexp(encoded, d, n, rsa_key_values)
+
+    print(f"Original message {hex(original_message)}")
+    print(f"Encoded message {hex(encoded)}")
     print(f"Decoded message {hex(decoded)}")
+
+    assert encoded == 0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7
     assert decoded == original_message

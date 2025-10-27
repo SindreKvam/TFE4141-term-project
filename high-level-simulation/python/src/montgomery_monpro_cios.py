@@ -34,7 +34,7 @@ def to_limbs(x, s, width) -> np.ndarray:
 
         bitmask = bitmask << width
 
-    logger.debug(f"x: {hex(x)} to limbs: {[hex(val) for val in _arr]}")
+    # logger.debug(f"x: {hex(x)} to limbs: {[hex(val) for val in _arr]}")
 
     return _arr
 
