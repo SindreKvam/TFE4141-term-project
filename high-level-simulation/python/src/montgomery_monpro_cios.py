@@ -39,7 +39,7 @@ def to_limbs(x, s, width) -> np.ndarray:
     return _arr
 
 
-def montgomery_monpro_cios(a, b, R, w, s, n, n_prime):
+def montgomery_monpro_cios(a, b, w, s, n, n_prime):
     """
     Perform the montgomery mod multiplication using the CIOS algorithm
 
@@ -48,7 +48,6 @@ def montgomery_monpro_cios(a, b, R, w, s, n, n_prime):
     Arguments:
         - a: input 1
         - b: input 2
-        - R: 2 ^ K (where K = w*s)
         - w: word size
         - s: number of words
     """

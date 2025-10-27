@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 
 from generate_rsa_key_values import get_rsa_key_values, RsaKeyValues
-from montgomery_monpro_cios import to_limbs, carry_sum, montgomery_monpro_cios
+from montgomery_monpro_cios import to_limbs, montgomery_monpro_cios
 from montgomery import montgomery_monpro
 
 from key_values import KEY_N, KEY_D, KEY_E, LAB_MESSAGE, EXPECTED_ENCODED
@@ -102,7 +102,7 @@ def test_montgomery_monpro_cios(a, b, w, s):
     n = to_limbs(key_values.n, s, w)
     n_prime = to_limbs(key_values.n_0_prime, s, w)
 
-    ans = montgomery_monpro_cios(a_split, b_split, key_values.r, w, s, n, n_prime)
+    ans = montgomery_monpro_cios(a_split, b_split, w, s, n, n_prime)
     expected_ans = (a * b * key_values.r_inv) % key_values.n
     expected_ans = to_limbs(expected_ans, s, w)
 
