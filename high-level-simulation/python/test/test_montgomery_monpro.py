@@ -43,7 +43,7 @@ def test_to_limbs(x: int, s: int, w: int):
 
     logger.info(f"Output limbs: {[hex(o) for o in out]}")
 
-    assert out[-1] == (x & (2**w - 1))
+    assert out[0] == (x & (2**w - 1))
     assert out.shape == (s,)
 
 
@@ -74,34 +74,42 @@ def test_montgomery_monpro(a, b, key_values):
 
 
 @pytest.mark.parametrize(
-    "a, b",
+    "a, b, w, s",
     [
-        (0xBADEBABE, 0xDEADBEEF),
-        (0xDEAD, 0xBEEF),
-        (LAB_MESSAGE, EXPECTED_ENCODED),
+        (0xBADEBABE, 0xDEADBEEF, 16, 16),
+        (0xBADEBABE, 0xDEADBEEF, 8, 32),
+        (0xDEAD, 0xBEEF, 16, 16),
+        (0xDEAD, 0xBEEF, 8, 32),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 16, 16),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 8, 32),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 4, 64),
+        (LAB_MESSAGE, EXPECTED_ENCODED, 2, 128),
     ],
 )
-def test_montgomery_monpro_cios(a, b, key_values, w=16, s=16):
+def test_montgomery_monpro_cios(a, b, w, s):
     """Test the CIOS implementation of the montgomery monpro algorithm"""
 
     assert w * s == 256
+
+    key_values = get_rsa_key_values(KEY_N, w, s)
 
     logger.info("Running test with CIOS implementation")
 
     logger.info(f"Calculating {hex(a)} * {hex(b)} mod {hex(key_values.n)}")
 
-    a = to_limbs(a, s, w)
-    b = to_limbs(b, s, w)
-    R = to_limbs(key_values.r, s, w)
-    p = to_limbs(key_values.n, s, w)
-    p_prime = to_limbs(key_values.n_0_prime, s, w)
+    a_split = to_limbs(a, s, w)
+    b_split = to_limbs(b, s, w)
+    n = to_limbs(key_values.n, s, w)
+    n_prime = to_limbs(key_values.n_0_prime, s, w)
 
-    ans = montgomery_monpro_cios(a, b, key_values.r, w, s, p, key_values.n_0_prime)
-    expected_ans = np.array(
-        [(a[i] * b[i] * key_values.r_inv) % key_values.n for i in range(s)]
-    )
+    ans = montgomery_monpro_cios(a_split, b_split, key_values.r, w, s, n, n_prime)
+    expected_ans = (a * b * key_values.r_inv) % key_values.n
+    expected_ans = to_limbs(expected_ans, s, w)
 
     logger.info(f"montgomery product: {[hex(int(a)) for a in ans]}")
     logger.info(f"expected montgomery product: {[hex(int(a)) for a in expected_ans]}")
 
-    assert ans.all(expected_ans)
+    assert np.sum(
+        [ans[i] == expected_ans[i] for i in range(len(expected_ans))],
+        dtype=int,
+    ) == len(expected_ans)
