@@ -31,16 +31,16 @@ def test_rsa_montgomery():
     original_message = LAB_MESSAGE
 
     encoded = montgomery_modexp(original_message, e, n, rsa_key_values)
-    # decoded = montgomery_modexp(encoded, d, n, rsa_key_values)
+    decoded = montgomery_modexp(encoded, d, n, rsa_key_values)
 
     logger.info(f"Original message: {hex(original_message)}")
     logger.info(f"Encoded message: {hex(encoded)}")
-    # logger.info(f"Decoded message: {hex(decoded)}")
+    logger.info(f"Decoded message: {hex(decoded)}")
 
     # Using the keys and message that will be used in the LAB
     # Then the expected encrypted message is:
     assert encoded == EXPECTED_ENCODED
-    # assert original_message == decoded
+    assert original_message == decoded
 
 
 def test_rsa_montgomery_cios():
@@ -56,13 +56,13 @@ def test_rsa_montgomery_cios():
     original_message = LAB_MESSAGE
 
     encoded = montgomery_modexp_cios(original_message, e, n, 16, 16, rsa_key_values)
-    # decoded = montgomery_modexp_cios(encoded, d, n, 16, 16, rsa_key_values)
+    decoded = montgomery_modexp_cios(encoded, d, n, 16, 16, rsa_key_values)
 
     logger.info(f"Original message: {hex(original_message)}")
     logger.info(f"Encoded message: {hex(encoded)}")
-    # logger.info(f"Decoded message: {hex(decoded)}")
+    logger.info(f"Decoded message: {hex(decoded)}")
 
     # Using the keys and message that will be used in the LAB
     # Then the expected encrypted message is:
     assert encoded == EXPECTED_ENCODED
-    # assert original_message == decoded
+    assert original_message == decoded
