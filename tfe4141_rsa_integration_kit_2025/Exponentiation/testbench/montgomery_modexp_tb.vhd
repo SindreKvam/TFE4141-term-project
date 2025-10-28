@@ -13,13 +13,13 @@ entity montgomery_modexp_tb is
         C_block_size : integer := 16;
 
         -- key values
-        e : std_logic_vector := std_logic_vector(to_unsigned(7, C_block_size));
-        d : std_logic_vector := std_logic_vector(to_unsigned(103, C_block_size));
+        e : std_logic_vector := std_logic_vector(to_unsigned(5, C_block_size));
+        d : std_logic_vector := std_logic_vector(to_unsigned(269, C_block_size));
 
         -- modulus values
-        n : std_logic_vector := std_logic_vector(to_unsigned(143, C_block_size));
-        n_prime: std_logic_vector := std_logic_vector(to_unsigned(57745, C_block_size));
-        r_stuff: std_logic_vector := std_logic_vector(to_unsigned(48, C_block_size))
+        n : std_logic_vector := std_logic_vector(to_unsigned(377, C_block_size));
+        n_prime: std_logic_vector := std_logic_vector(to_unsigned(91959, C_block_size));
+        r_stuff: std_logic_vector := std_logic_vector(to_unsigned(74, C_block_size))
     );
 end montgomery_modexp_tb;
 
@@ -37,7 +37,7 @@ architecture sim of montgomery_modexp_tb is
     signal key : std_logic_vector(C_block_size - 1 downto 0) := (others => '0');
     
     --output control
-    signal ready_out : std_logic := '0';
+    signal ready_out : std_logic := '1';
     signal valid_out : std_logic := '0';
 
     --output data
@@ -90,12 +90,13 @@ architecture sim of montgomery_modexp_tb is
     procedure generate_test_messages(signal message_i : out testMessagesarr) is
         variable seed1 : positive;
         variable seed2 : positive;
+        variable seed3 : positive;
         variable rand : real;
     begin
         --calcing test data
         for o in 3 downto 0 loop
             for i in C_block_size - 1 downto 0 loop 
-                uniform(seed1, seed2, rand);
+                uniform(seed2, seed3, rand);
                 if rand > 0.5 then
                     message_i(o)(i) <= '1';
                 else
@@ -119,34 +120,34 @@ begin
     end process;
 
     --Pushing data to data_in
-    datapusher: process is
-    begin
-        wait for 60 ns;
+    -- datapusher: process is
+    -- begin
+    --     wait for 60 ns;
 
-        wait until rising_edge(clk);
-        write_all : for i in 3 downto 0 loop
-            --make sure puller is finished before we can push more messages
-            if (ready_for_push = '0') then
-                wait until rising_edge(ready_for_push);
-            end if;
-            message <= testMessages(i);
-            key <= e;
-            valid_in <= '1';
-            --pusher sets ready_for_push to 0 after pushing
-            --puller is responsible for setting it to 1 again
-            ready_for_push <= '0';
-            if (ready_in = '0') then
-                wait until rising_edge(ready_in);
-            end if;
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
-            valid_in <=  '0';
-            wait until falling_edge(clk);
-            wait until rising_edge(clk);
+    --     wait until rising_edge(clk);
+    --     write_all : for i in 3 downto 0 loop
+    --         --make sure puller is finished before we can push more messages
+    --         if (ready_for_push = '0') then
+    --             wait until rising_edge(ready_for_push);
+    --         end if;
+    --         message <= testMessages(i);
+    --         key <= e;
+    --         valid_in <= '1';
+    --         --pusher sets ready_for_push to 0 after pushing
+    --         --puller is responsible for setting it to 1 again
+    --         ready_for_push <= '0';
+    --         if (ready_in = '0') then
+    --             wait until rising_edge(ready_in);
+    --         end if;
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
+    --         valid_in <=  '0';
+    --         wait until falling_edge(clk);
+    --         wait until rising_edge(clk);
 
-        end loop write_all;
-        wait;
-    end process datapusher;
+    --     end loop write_all;
+    --     wait;
+    -- end process datapusher;
 
     --pulling result
     -- datapuller : process is
@@ -156,7 +157,7 @@ begin
     --     wait until rising_edge(clk);
     --     readout_all : for i in 3 downto 0 loop
     --         ready_out <= '1';
-    --         if (valid_out = '0') then
+    --         if not (valid_out = '1') then
     --             wait until rising_edge(valid_out);
     --         end if;
     --         wait until falling_edge(clk);
@@ -167,7 +168,7 @@ begin
     --         message <= result;
     --         key <= d;
     --         valid_in <= '1';
-    --         if (ready_in = '0') then
+    --         if not (ready_in = '1') then
     --             wait until rising_edge(ready_in);
     --         end if;
     --         wait until falling_edge(clk);
@@ -177,7 +178,7 @@ begin
     --         wait until rising_edge(clk);
 
     --         ready_out <= '1';
-    --         if (valid_out = '0') then
+    --         if not (valid_out = '1') then
     --             wait until rising_edge(valid_out);
     --         end if;
     --         wait until falling_edge(clk);
@@ -195,9 +196,59 @@ begin
     --         --     report "Incorrect result: test " & integer'image(i) & " expected [" & stdvec_to_string(message(i)) & "] got [" & stdvec_to_string(readout) & "]"
     --         --         severity failure;
 
-    --     end loop readout_all;
+        -- end loop readout_all;
 
     -- end process datapuller;
+
+    --process is full testing of one word
+    --includes encryption and decryption
+    data_handler: process is
+    begin
+        key <= e;
+        wait for 60 ns;
+        wait until rising_edge(clk);
+        write_all: for i in 3 downto 0 loop
+            --ready_for_push is initialized as 1
+            message <= testMessages(i);
+            valid_in <= '1';
+
+            if (ready_in = '0') then
+                wait until rising_edge(ready_in);
+            end if;
+
+            --wait one clock cycle
+            wait until falling_edge(clk);
+            wait until rising_edge(clk);
+            ready_for_push <= '0';
+            valid_in <= '0';
+            wait until falling_edge(clk);
+            wait until rising_edge(clk);
+            ready_for_push <= '1';
+
+            --modexp now has message to be encrypted
+            --wait for an answer, then send it back
+            wait until rising_edge(valid_out);
+            message <= result;
+            valid_in <= '1';
+
+            if (ready_in = '0') then
+                wait until rising_edge(ready_in);
+            end if;
+
+            --wait one clock cycle
+            wait until falling_edge(clk);
+            wait until rising_edge(clk);
+            ready_for_push <= '0';
+            valid_in <= '0';
+            wait until falling_edge(clk);
+            wait until rising_edge(clk);
+            ready_for_push <= '1';
+
+            wait until rising_edge(valid_out);
+
+        end loop write_all;
+
+    end process data_handler;
 
     DUT : entity work.montgomery_modexp(rtl)
 

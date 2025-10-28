@@ -189,7 +189,7 @@ begin
                 if calc_type < 2 then
                     calc_type <= calc_type + 1;
 
-                elsif calc_type = 2 and key(C_block_size - to_integer(loop_counter)) = '1' then
+                elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
                     calc_type <= calc_type + 1;
 
                 elsif calc_type = 3 then
@@ -203,7 +203,7 @@ begin
                 end if;
 
                 -- is the calculation done ?
-                if loop_counter >= C_block_size then
+                if loop_counter >= C_block_size - 1 then
                     state <= ST_HOLD;
                 else
                     state <= ST_LOAD;
