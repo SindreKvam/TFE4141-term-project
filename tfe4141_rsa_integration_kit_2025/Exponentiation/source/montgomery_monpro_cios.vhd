@@ -39,12 +39,15 @@ architecture rtl of montgomery_monpro_cios is
     -- constant C_NUM_CALC_CYCLES : natural := 4;
     -- signal s_calc_counter : unsigned(7 downto 0);
 
+    type T_ARRAY is array(0 to GC_NUM_LIMBS - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
+    signal input_limbs : T_ARRAY;
+
     -- Buffered signals for input Values
-    signal s_a : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
-    signal s_b : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
-    signal s_n : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
+    signal s_a : T_ARRAY;--std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
+    signal s_b : T_ARRAY;
+    signal s_n : T_ARRAY;
     signal s_n_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0); -- for CIOS we only need the first part of n_prime
-    
+
     -- signal t : unsigned(GC_DATA_WIDTH * 2 - 1 downto 0);
     -- signal m : unsigned(GC_DATA_WIDTH - 1 downto 0);
     -- signal u_shift : unsigned(GC_DATA_WIDTH - 1 downto 0);
@@ -52,8 +55,6 @@ architecture rtl of montgomery_monpro_cios is
     type T_FSM is (ST_IDLE, ST_CALC, ST_HOLD);
     signal state : T_FSM;
 
-    type T_ARRAY is array(0 to GC_NUM_LIMBS) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal input_limbs : T_ARRAY;
 
 begin
 
@@ -94,9 +95,11 @@ begin
                         -- s_calc_counter <= (others => '0');
 
                         -- Load input to registers
-                        s_a <= a;
-                        s_b <= b;
-                        s_n <= n;
+                        for i in 0 to GC_NUM_LIMBS - 1 loop
+                            s_a(i) <= a((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                            s_b(i) <= b((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                            s_n(i) <= n((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                        end loop;
                         s_n_prime <= n_prime;
 
                         state <= ST_CALC;
