@@ -69,8 +69,10 @@ begin
 
         out_ready <= '1' after 10 * C_CLOCK_PERIOD;
         
-        wait for 10 * C_CLOCK_PERIOD;
-        assert u /= std_logic_vector(to_unsigned(26, C_DATA_WIDTH)) report "Incorrect result" severity note;
+        wait for 20 * C_CLOCK_PERIOD;
+
+        assert u /= x"8abe76b2cf6e603497a8ba867eddc580b943f5690777e388fae627e05449851a" report "Incorrect result" severity note;
+
         report "Testbench finished";
 
     end process SEQUENCER_PROC;
