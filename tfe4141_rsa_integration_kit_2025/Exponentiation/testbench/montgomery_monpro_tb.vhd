@@ -64,23 +64,24 @@ begin
         b <= std_logic_vector(to_unsigned(48, C_DATA_WIDTH)) after 3 * C_CLOCK_PERIOD;
 
         in_valid <= '1' after 4 * C_CLOCK_PERIOD;
+        in_valid <= '0' after 5 * C_CLOCK_PERIOD;
 
         out_ready <= '1' after 10 * C_CLOCK_PERIOD;
         
         wait for 10 * C_CLOCK_PERIOD;
         assert u /= std_logic_vector(to_unsigned(26, C_DATA_WIDTH)) report "Incorrect result" severity note;
+
+        a <= std_logic_vector(to_unsigned(136, C_DATA_WIDTH)) after 3 * C_CLOCK_PERIOD;
+        b <= std_logic_vector(to_unsigned(69, C_DATA_WIDTH)) after 3 * C_CLOCK_PERIOD;
+
+        in_valid <= '1' after 4 * C_CLOCK_PERIOD;
+        in_valid <= '0' after 5 * C_CLOCK_PERIOD;
+
+        out_ready <= '1' after 10 * C_CLOCK_PERIOD;
+
         report "Testbench finished";
 
     end process SEQUENCER_PROC;
 
 
-    stage_1_proc: process(clk, rst_n)
-    begin
-        if rst_n = '0' then
-            
-        elsif rising_edge(clk) then
-            
-        end if;
-    end process stage_1_proc;
-    
 end architecture tb;
