@@ -26,10 +26,10 @@ architecture rtl of beta is
     
 begin
     
-    p_beta: process(clk)
+    p_beta: process(clk, rst_n)
 
         variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
-        variable v_m : unsigned(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+        variable v_m : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
 
     begin
 
@@ -48,9 +48,9 @@ begin
         --------------------------------------------
 
             v_m := unsigned(sum_in) * unsigned(n_0_prime);
-            v_tmp_result := unsigned(sum_in) + unsigned(n_0) * unsigned(v_m);
+            v_tmp_result := unsigned(sum_in) + unsigned(n_0) * unsigned(v_m(GC_LIMB_WIDTH - 1 downto 0));
             
-            m <= std_logic_vector(v_m);
+            m <= std_logic_vector(v_m(GC_LIMB_WIDTH - 1 downto 0));
             beta_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
 
         --------------------------------------------

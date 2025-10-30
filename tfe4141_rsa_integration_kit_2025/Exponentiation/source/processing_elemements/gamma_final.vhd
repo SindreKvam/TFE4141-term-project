@@ -26,9 +26,9 @@ architecture rtl of gamma_final is
     
 begin
     
-    p_gamma_final: process(clk)
+    p_gamma_final: process(clk, rst_n)
 
-        variable v_tmp_result : unsigned(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+        variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
 
     begin
 
@@ -45,7 +45,7 @@ begin
         elsif rising_edge(clk) then
         --------------------------------------------
 
-            v_tmp_result := unsigned(sum_1_in) + unsigned(carry_in);
+            v_tmp_result := resize(unsigned(sum_1_in) + unsigned(carry_in), v_tmp_result'length);
             
             gamma_sum_1 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
             gamma_sum_2 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) + unsigned(sum_2_in));

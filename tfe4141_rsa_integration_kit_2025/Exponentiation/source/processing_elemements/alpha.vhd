@@ -27,7 +27,7 @@ architecture rtl of alpha is
     
 begin
     
-    p_alpha: process(clk)
+    p_alpha: process(clk, rst_n)
 
         variable v_tmp_sum_result : unsigned(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
         variable v_tmp_mult_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');

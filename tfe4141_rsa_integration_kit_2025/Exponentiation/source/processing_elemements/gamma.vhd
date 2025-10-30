@@ -27,7 +27,7 @@ architecture rtl of gamma is
     
 begin
     
-    p_gamma: process(clk)
+    p_gamma: process(clk, rst_n)
 
         variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
 
