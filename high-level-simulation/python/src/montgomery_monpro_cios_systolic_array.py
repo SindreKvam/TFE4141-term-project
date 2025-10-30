@@ -86,6 +86,75 @@ def montgomery_monpro_cios_systolic_array(a, b, w, s, n, n_prime):
     return T
 
 
+def montgomery_monpro_cios_systolic_array_nw_16_verbose(a, b, w, s, n, n_prime):
+    """
+    Perform the montgomery mod multiplication using the CIOS algorithm
+
+    a * b * R^(-1) mod n
+
+    Arguments:
+        - a: input 1
+        - b: input 2
+        - w: word size
+        - s: number of words
+    """
+    a = to_limbs(a, s, w)
+    b = to_limbs(b, s, w)
+    n = to_limbs(n, s, w)
+    n_prime = to_limbs(n_prime, s, w)
+
+    # Create array T to store all intermediate results
+    T = np.zeros(s + 2)
+
+    for i in range(s):
+        C = 0
+
+        C, T[0] = alpha(a[0], b[i], T[0], C, w=w)
+        C, T[1] = alpha(a[1], b[i], T[1], C, w=w)
+        C, T[2] = alpha(a[2], b[i], T[2], C, w=w)
+        C, T[3] = alpha(a[3], b[i], T[3], C, w=w)
+        C, T[4] = alpha(a[4], b[i], T[4], C, w=w)
+        C, T[5] = alpha(a[5], b[i], T[5], C, w=w)
+        C, T[6] = alpha(a[6], b[i], T[6], C, w=w)
+        C, T[7] = alpha(a[7], b[i], T[7], C, w=w)
+        C, T[8] = alpha(a[8], b[i], T[8], C, w=w)
+        C, T[9] = alpha(a[9], b[i], T[9], C, w=w)
+        C, T[10] = alpha(a[10], b[i], T[10], C, w=w)
+        C, T[11] = alpha(a[11], b[i], T[11], C, w=w)
+        C, T[12] = alpha(a[12], b[i], T[12], C, w=w)
+        C, T[13] = alpha(a[13], b[i], T[13], C, w=w)
+        C, T[14] = alpha(a[14], b[i], T[14], C, w=w)
+        C, T[15] = alpha(a[15], b[i], T[15], C, w=w)
+
+        T[16 + 1], T[16] = alpha_final(C, T[16], w=w)
+
+        C, m = beta(T[0], n[0], n_prime[0], w=w)
+
+        C, T[1 - 1] = gamma(n[1], m, C, T[1], w=w)
+        C, T[2 - 1] = gamma(n[2], m, C, T[2], w=w)
+        C, T[3 - 1] = gamma(n[3], m, C, T[3], w=w)
+        C, T[4 - 1] = gamma(n[4], m, C, T[4], w=w)
+        C, T[5 - 1] = gamma(n[5], m, C, T[5], w=w)
+        C, T[6 - 1] = gamma(n[6], m, C, T[6], w=w)
+        C, T[7 - 1] = gamma(n[7], m, C, T[7], w=w)
+        C, T[8 - 1] = gamma(n[8], m, C, T[8], w=w)
+        C, T[9 - 1] = gamma(n[9], m, C, T[9], w=w)
+        C, T[10 - 1] = gamma(n[10], m, C, T[10], w=w)
+        C, T[11 - 1] = gamma(n[11], m, C, T[11], w=w)
+        C, T[12 - 1] = gamma(n[12], m, C, T[12], w=w)
+        C, T[13 - 1] = gamma(n[13], m, C, T[13], w=w)
+        C, T[14 - 1] = gamma(n[14], m, C, T[14], w=w)
+        C, T[15 - 1] = gamma(n[15], m, C, T[15], w=w)
+
+        T[16 - 1], T[16] = gamma_final(C, T[16], T[16 + 1], w=w)
+
+    if from_limbs(T, w) >= from_limbs(n, w):
+        T_int = int(from_limbs(T, w)) - from_limbs(n, w)
+        T = to_limbs(T_int, s, w)
+
+    return T
+
+
 def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
     """
     Perform montgomery exponentiation to find the solution to
