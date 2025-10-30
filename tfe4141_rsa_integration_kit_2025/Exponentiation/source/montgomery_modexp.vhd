@@ -45,8 +45,8 @@ architecture rtl of montgomery_modexp is
     signal C_bar : std_logic_vector(C_block_size - 1 downto 0);
 
 	signal s_calc_counter : unsigned(7 downto 0);
-    signal loop_counter : unsigned(7 downto 0);-- keep track of index of e
-    signal calc_type : unsigned(1 downto 0);-- there are 4 different monpro variations
+    signal loop_counter : unsigned(8 downto 0);-- keep track of index of e
+    signal calc_type : unsigned(2 downto 0);-- there are 5 different monpro variations
     -- 0 --> M_bar <= monpro(1,(r*r)%n)
     -- 1 --> C_bar <= monpro(1,(r*r)%n)
     -- 2 --> C_bar <= monpro(C_bar, C_bar)
@@ -152,6 +152,9 @@ begin
                 elsif calc_type = 3 then
                     a <= M_bar;
                     b <= C_bar;
+                elsif calc_type = 4 then
+                    a <= C_bar;
+                    b <= std_logic_vector(to_unsigned(1, C_block_size));
                 else
                     state <= ST_IDLE; -- this state cant happen
                     
@@ -194,6 +197,10 @@ begin
 
                 elsif calc_type = 3 then
                     C_bar <= monpro_data;
+                
+                elsif calc_type = 4 then
+                    result <= monpro_data;
+                    
 
                 else
                     state <= ST_IDLE; -- can not happen
@@ -214,7 +221,10 @@ begin
                 elsif calc_type = 3 then
                     calc_type <= calc_type - 1;-- go back in the loop
                     loop_counter <= loop_counter + 1;
-
+                
+                elsif calc_type = 4 then
+                    loop_counter <= loop_counter + 1; 
+                    
                 else
                     calc_type <= calc_type; -- no change in calc type
                     loop_counter <= loop_counter + 1; 
@@ -222,7 +232,10 @@ begin
                 end if;
 
                 -- is the calculation done ?
-                if loop_counter >= C_block_size - 1 then
+                if loop_counter = C_block_size - 1 then
+                    calc_type <= to_unsigned(4, 3);
+                    state <= ST_LOAD;
+                elsif loop_counter > C_block_size - 1 then
                     state <= ST_HOLD;
                 else
                     state <= ST_LOAD;
@@ -230,7 +243,6 @@ begin
 
 
             when ST_HOLD =>
-                result <= monpro_data;-- for some reson we need to actually get the result....
                 v_in_ready := '0';
                 v_out_valid := '1';
 
