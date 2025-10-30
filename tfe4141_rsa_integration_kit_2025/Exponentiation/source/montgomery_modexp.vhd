@@ -234,7 +234,10 @@ begin
                 end if;
 
                 -- is the calculation done ?
-                if loop_counter >= C_block_size - 1 then
+                if done_with_calc = 1 then
+                    state <= ST_HOLD;
+
+                elsif loop_counter >= C_block_size - 1 then
                     calc_type <= to_unsigned(4, 3); --calctype = 4
                     done_with_calc <= to_unsigned(1,1); --we are done with calc on next cycle
                     state <= ST_LOAD;
@@ -242,8 +245,7 @@ begin
                 elsif loop_counter <= C_block_size - 1 then
                     state <= ST_LOAD;
 
-                elsif done_with_calc = 1 then
-                    state <= ST_HOLD;
+        
                     
                 else
                     state <= ST_IDLE;
