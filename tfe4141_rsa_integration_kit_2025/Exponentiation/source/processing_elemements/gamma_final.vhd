@@ -11,6 +11,7 @@ entity gamma_final is
     port(
         clk : in std_logic;
         rst_n : in std_logic;
+        valid : in std_logic;
         --------------------------------------------------
         carry_in : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
         sum_1_in : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
@@ -45,10 +46,19 @@ begin
         elsif rising_edge(clk) then
         --------------------------------------------
 
-            v_tmp_result := resize(unsigned(sum_1_in) + unsigned(carry_in), v_tmp_result'length);
-            
-            gamma_sum_1 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
-            gamma_sum_2 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) + unsigned(sum_2_in));
+            if valid = '1' then
+
+                v_tmp_result := resize(unsigned(sum_1_in) + unsigned(carry_in), v_tmp_result'length);
+                
+                gamma_sum_1 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
+                gamma_sum_2 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) + unsigned(sum_2_in));
+
+            else
+
+                gamma_sum_1 <= (others => '0');
+                gamma_sum_2 <= (others => '0');
+
+            end if;
 
         --------------------------------------------
         end if;
