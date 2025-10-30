@@ -47,6 +47,7 @@ architecture rtl of montgomery_modexp is
 	signal s_calc_counter : unsigned(7 downto 0);
     signal loop_counter : unsigned(8 downto 0);-- keep track of index of e
     signal calc_type : unsigned(2 downto 0);-- there are 5 different monpro variations
+    signal done_with_calc : unsigned(0 downto 0);
     -- 0 --> M_bar <= monpro(1,(r*r)%n)
     -- 1 --> C_bar <= monpro(1,(r*r)%n)
     -- 2 --> C_bar <= monpro(C_bar, C_bar)
@@ -58,6 +59,7 @@ architecture rtl of montgomery_modexp is
     signal monpro_out_valid : std_logic;
     signal monpro_out_ready : std_logic;
     signal monpro_data : std_logic_vector(C_block_size - 1 downto 0);
+    
     
 begin
     --include montgomery monpro--
@@ -223,7 +225,7 @@ begin
                     loop_counter <= loop_counter + 1;
                 
                 elsif calc_type = 4 then
-                    state <= ST_HOLD; 
+                    done_with_calc <= to_unsigned(1,1);
                     
                 else
                     calc_type <= calc_type; -- no change in calc type
@@ -232,11 +234,19 @@ begin
                 end if;
 
                 -- is the calculation done ?
-                if loop_counter = C_block_size then
-                    calc_type <= to_unsigned(4, 3);
+                if loop_counter >= C_block_size - 1 then
+                    calc_type <= to_unsigned(4, 3); --calctype = 4
+                    done_with_calc <= to_unsigned(1,1); --we are done with calc on next cycle
                     state <= ST_LOAD;
+                
+                elsif loop_counter <= C_block_size - 1 then
+                    state <= ST_LOAD;
+
+                elsif done_with_calc = 1 then
+                    state <= ST_HOLD;
+                    
                 else
-                    state <= ST_LOAD;
+                    state <= ST_IDLE;
                 end if;
 
 
