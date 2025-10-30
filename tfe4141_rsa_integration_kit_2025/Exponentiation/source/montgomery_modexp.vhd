@@ -232,10 +232,10 @@ begin
                 end if;
 
                 -- is the calculation done ?
-                if loop_counter = C_block_size - 1 then
+                if loop_counter = C_block_size then
                     calc_type <= to_unsigned(4, 3);
                     state <= ST_LOAD;
-                elsif loop_counter > C_block_size - 1 then
+                elsif loop_counter > C_block_size then
                     state <= ST_HOLD;
                 else
                     state <= ST_LOAD;
