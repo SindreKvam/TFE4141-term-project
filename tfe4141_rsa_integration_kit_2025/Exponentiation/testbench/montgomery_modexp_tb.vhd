@@ -204,7 +204,6 @@ begin
     --includes encryption and decryption
     data_handler: process is
     begin
-        key <= e;
         wait for 60 ns;
         wait until rising_edge(clk);
         write_all: for i in 3 downto 0 loop
@@ -215,6 +214,7 @@ begin
             if (ready_in = '0') then
                 wait until rising_edge(ready_in);
             end if;
+            key <= e;
 
             --wait one clock cycle
             wait until falling_edge(clk);
@@ -234,6 +234,7 @@ begin
             if (ready_in = '0') then
                 wait until rising_edge(ready_in);
             end if;
+            key <= d;
 
             --wait one clock cycle
             wait until falling_edge(clk);
