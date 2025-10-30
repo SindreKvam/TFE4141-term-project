@@ -117,6 +117,7 @@ begin
 
                     if s_calc_counter >= C_NUM_CALC_CYCLES then
                         state <= ST_HOLD;
+                        v_out_valid := '1';
                     end if;
 
                     s_calc_counter <= s_calc_counter + 1;
@@ -125,10 +126,12 @@ begin
                 when ST_HOLD =>
                 --------------------------------------------------
 
-                    v_out_valid := '1';
 
                     if out_ready = '1' then
+                        v_in_ready := '1';
                         state <= ST_IDLE;
+                    else
+                        v_out_valid := '1';
                     end if;
 
                 --------------------------------------------------
