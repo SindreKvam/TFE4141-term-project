@@ -11,6 +11,8 @@ package montgomery_pkg is
     constant C_DATA_WIDTH : integer := 256;
     constant C_LIMB_WIDTH : integer := 16;
     constant C_NUM_LIMBS  : integer := 16;
+    constant C_NUM_ALPHA  : integer := 6;
+    constant C_NUM_GAMMA  : integer := 6;
 
     --------------------------------------------------
     -- Data types
