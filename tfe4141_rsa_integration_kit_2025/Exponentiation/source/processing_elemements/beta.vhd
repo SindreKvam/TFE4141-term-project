@@ -26,7 +26,7 @@ architecture rtl of beta is
     
 begin
     
-    p_alpha_final: process(clk)
+    p_beta: process(clk)
 
         variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
         variable v_m : unsigned(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
@@ -55,6 +55,6 @@ begin
 
         --------------------------------------------
         end if;
-    end process p_alpha_final;
+    end process p_beta;
     
 end architecture rtl;
