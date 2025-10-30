@@ -47,7 +47,6 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     signal s_a : T_LIMBS_ARRAY;
     signal s_b : T_LIMBS_ARRAY;
     signal s_n : T_LIMBS_ARRAY;
-
     signal s_n_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0); -- for CIOS we only need the first part of n_prime
 
 
@@ -112,6 +111,27 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
 
 begin
 
+    -- Renaming signals that always should be connected
+    in_beta_n_0 <= s_n(0);
+    in_beta_n_0_prime <= s_n_prime;
+
+    in_gamma_carry(0) <= out_beta_carry;
+    in_gamma_m(0) <= out_beta_m;
+    in_gamma_n(0) <= s_n(1);
+
+    in_alpha_final_sum <= out_gamma_final_sum_2;
+    in_gamma_final_sum_1 <= out_alpha_final_sum;
+    in_gamma_final_sum_2 <= out_alpha_final_carry;
+
+    -- Last gamma goes to gamma_last
+    in_gamma_final_carry <= out_gamma_carry(GC_NUM_GAMMA - 1);
+
+    in_alpha_final_carry <= out_alpha_carry(GC_NUM_ALPHA - 1);
+
+
+    --------------------------------------------------
+    -- Main process
+    --------------------------------------------------
     monpro_proc: process(clk, rst_n)
 
         variable v_out_valid : std_logic;
@@ -150,15 +170,15 @@ begin
         --------------------------------------------------
 
             -- Reset all variables
-            v_out_valid := '0';
-            v_in_ready := '0';
-
-            v_carry_sum := (others => (others => '0'));
-            v_carry := (others => '0');
-
+            -- v_out_valid := '0';
+            -- v_in_ready := '0';
+            --
+            -- v_carry_sum := (others => (others => '0'));
+            -- v_carry := (others => '0');
+            --
             v_t := (others => (others => '0'));
-            v_m := (others => '0');
-            v_m_temp := (others => '0');
+            -- v_m := (others => '0');
+            -- v_m_temp := (others => '0');
 
             --------------------------------------------------
             -- Finite State Machine
@@ -191,44 +211,44 @@ begin
                 when ST_CALC =>
                 --------------------------------------------------
 
-                    for i in 0 to GC_NUM_LIMBS - 1 loop
-
-                        v_carry := (others => '0');
-
-                        for j in 0 to GC_NUM_LIMBS - 1 loop
-
-                            v_carry_sum := carry_sum(v_t(j), s_a(j), s_b(i), v_carry);
-                            v_carry := v_carry_sum(0);
-                            v_t(j) := v_carry_sum(1);
-
-                        end loop;
-
-                        v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others=>'0'), (others => '0'), v_carry);
-                        v_t(GC_NUM_LIMBS + 1) := v_carry_sum(0);
-                        v_t(GC_NUM_LIMBS) := v_carry_sum(1);
-
-                        v_carry := (others => '0');
-                        v_m_temp := std_logic_vector(unsigned(v_t(0)) * unsigned(s_n_prime));
-                        v_m := v_m_temp(GC_NUM_LIMBS - 1 downto 0);
-
-                        v_carry_sum := carry_sum(v_t(0), v_m, s_n(0), (others => '0'));
-                        v_carry := v_carry_sum(0);
-
-                        for j in 1 to GC_NUM_LIMBS - 1 loop
-
-                            v_carry_sum := carry_sum(v_t(j), v_m, s_n(j), v_carry);
-                            v_carry := v_carry_sum(0);
-                            v_t(j-1) := v_carry_sum(1);
-
-                        end loop;
-
-                        v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others => '0'), (others => '0'), v_carry);
-                        v_carry := v_carry_sum(0);
-                        v_t(GC_NUM_LIMBS-1) := v_carry_sum(1);
-
-                        v_t(GC_NUM_LIMBS) := std_logic_vector(unsigned(v_t(GC_NUM_LIMBS + 1)) + unsigned(v_carry));
-
-                    end loop;
+                --     for i in 0 to GC_NUM_LIMBS - 1 loop
+                --
+                --         v_carry := (others => '0');
+                --
+                --         for j in 0 to GC_NUM_LIMBS - 1 loop
+                --
+                --             v_carry_sum := carry_sum(v_t(j), s_a(j), s_b(i), v_carry);
+                --             v_carry := v_carry_sum(0);
+                --             v_t(j) := v_carry_sum(1);
+                --
+                --         end loop;
+                --
+                --         v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others=>'0'), (others => '0'), v_carry);
+                --         v_t(GC_NUM_LIMBS + 1) := v_carry_sum(0);
+                --         v_t(GC_NUM_LIMBS) := v_carry_sum(1);
+                --
+                --         v_carry := (others => '0');
+                --         v_m_temp := std_logic_vector(unsigned(v_t(0)) * unsigned(s_n_prime));
+                --         v_m := v_m_temp(GC_NUM_LIMBS - 1 downto 0);
+                --
+                --         v_carry_sum := carry_sum(v_t(0), v_m, s_n(0), (others => '0'));
+                --         v_carry := v_carry_sum(0);
+                --
+                --         for j in 1 to GC_NUM_LIMBS - 1 loop
+                --
+                --             v_carry_sum := carry_sum(v_t(j), v_m, s_n(j), v_carry);
+                --             v_carry := v_carry_sum(0);
+                --             v_t(j-1) := v_carry_sum(1);
+                --
+                --         end loop;
+                --
+                --         v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others => '0'), (others => '0'), v_carry);
+                --         v_carry := v_carry_sum(0);
+                --         v_t(GC_NUM_LIMBS-1) := v_carry_sum(1);
+                --
+                --         v_t(GC_NUM_LIMBS) := std_logic_vector(unsigned(v_t(GC_NUM_LIMBS + 1)) + unsigned(v_carry));
+                --
+                --     end loop;
 
                 --------------------------------------------------
                 when ST_HOLD =>
@@ -238,6 +258,7 @@ begin
 
                     if out_ready = '1' then
                         state <= ST_IDLE;
+                        v_out_valid := '0';
                     end if;
 
                 --------------------------------------------------
