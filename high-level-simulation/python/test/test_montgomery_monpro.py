@@ -4,8 +4,9 @@ import pytest
 import numpy as np
 
 from generate_rsa_key_values import get_rsa_key_values, RsaKeyValues
-from montgomery_monpro_cios import to_limbs, from_limbs, montgomery_monpro_cios
 from montgomery import montgomery_monpro
+from montgomery_monpro_cios import to_limbs, from_limbs, montgomery_monpro_cios
+from montgomery_monpro_cios_systolic_array import montgomery_monpro_cios_systolic_array
 
 from key_values import KEY_N, KEY_D, KEY_E, LAB_MESSAGE, EXPECTED_ENCODED
 
@@ -169,11 +170,18 @@ def test_compare_monpro_methods(a, b, w, s):
         ),
         w,
     )
+    ans_cios_sa = from_limbs(
+        montgomery_monpro_cios_systolic_array(
+            a, b, w, s, key_values_cios.n, key_values_cios.n_0_prime
+        ),
+        w,
+    )
 
     expected_ans = (a * b * key_values.r_inv) % key_values.n
 
     logger.info(f"MonPro answer: {hex(ans)}")
     logger.info(f"MonPro CIOS answer: {hex(ans_cios)}")
+    logger.info(f"MonPro CIOS systolic array answer: {hex(ans_cios_sa)}")
     logger.info(f"Expected answer: {hex(expected_ans)}")
 
     assert expected_ans == ans == ans_cios

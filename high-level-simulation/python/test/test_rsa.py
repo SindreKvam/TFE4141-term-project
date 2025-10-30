@@ -1,10 +1,12 @@
-import pytest
 import logging
 
 from generate_rsa_key_values import get_rsa_key_values
 
 from montgomery import montgomery_modexp
 from montgomery_monpro_cios import montgomery_modexp as montgomery_modexp_cios
+from montgomery_monpro_cios_systolic_array import (
+    montgomery_modexp as montgomery_modexp_cios_systolic_array,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,35 @@ def test_rsa_montgomery_cios():
 
     encoded = montgomery_modexp_cios(original_message, e, n, 16, 16, rsa_key_values)
     decoded = montgomery_modexp_cios(encoded, d, n, 16, 16, rsa_key_values)
+
+    logger.info(f"Original message: {hex(original_message)}")
+    logger.info(f"Encoded message: {hex(encoded)}")
+    logger.info(f"Decoded message: {hex(decoded)}")
+
+    # Using the keys and message that will be used in the LAB
+    # Then the expected encrypted message is:
+    assert encoded == EXPECTED_ENCODED
+    assert original_message == decoded
+
+
+def test_rsa_montgomery_cios_systolic_array():
+    """Test RSA with montgomery modexp algorithm
+    using CIOS montgomery monpro algorithm as a systolic array"""
+
+    n = KEY_N
+    e = KEY_E
+    d = KEY_D
+
+    rsa_key_values = get_rsa_key_values(n, 16, 16)
+
+    original_message = LAB_MESSAGE
+
+    encoded = montgomery_modexp_cios_systolic_array(
+        original_message, e, n, 16, 16, rsa_key_values
+    )
+    decoded = montgomery_modexp_cios_systolic_array(
+        encoded, d, n, 16, 16, rsa_key_values
+    )
 
     logger.info(f"Original message: {hex(original_message)}")
     logger.info(f"Encoded message: {hex(encoded)}")

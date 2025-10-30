@@ -56,70 +56,34 @@ def montgomery_monpro_cios_systolic_array(a, b, w, s, n, n_prime):
         - w: word size
         - s: number of words
     """
-
-    valid_num_limbs = [8, 16]
-    if s not in valid_num_limbs:
-        raise NotImplementedError(
-            f"Only systolic arrays of size {valid_num_limbs} are implemented."
-        )
-
     a = to_limbs(a, s, w)
     b = to_limbs(b, s, w)
     n = to_limbs(n, s, w)
     n_prime = to_limbs(n_prime, s, w)
 
-    print("-" * 50)
-    for arr in [a, b, n, n_prime]:
-        print([hex(val) for val in arr])
-    print("-" * 50)
+    # Create array T to store all intermediate results
+    T = np.zeros(s + 2)
 
-    alpha_carry = alpha_sum = np.zeros(shape=(s + 1,))
-    beta_carry = beta_sum = 0
-    gamma_carry = gamma_sum = np.zeros(shape=(s + 2,))
+    for i in range(s):
+        C = 0
 
-    for limb_index in range(s):
-        for word_index in range(w + 1):
-            i = limb_index
-            j = word_index
+        for j in range(s):
+            C, T[j] = alpha(a[j], b[i], T[j], C, w=w)
 
-            if word_index < w:
-                alpha_carry[j + 1], alpha_sum[j + 1] = alpha(
-                    a[i], b[j], alpha_carry[j], alpha_sum[j], w=w
-                )
-                # print(alpha_carry[j + 1], alpha_sum[j + 1])
+        T[s + 1], T[s] = alpha_final(C, T[s], w=w)
 
-            if word_index == 1:
-                beta_carry, beta_sum = beta(alpha_sum[j], n[0], n_prime[0], w=w)
+        C, m = beta(T[0], n[0], n_prime[0], w=w)
 
-            elif word_index == 2:
-                gamma_carry[j + 1], gamma_sum[j + 1] = gamma(
-                    n[i], beta_sum, beta_carry, alpha_sum[j], w=w
-                )
+        for j in range(1, s):
+            C, T[j - 1] = gamma(n[j], m, C, T[j], w=w)
 
-            elif word_index == w - 1:
-                alpha_carry[j + 1], alpha_sum[j + 1] = alpha_final(
-                    alpha_carry[j], alpha_sum[j], w=w
-                )
+        T[s - 1], T[s] = gamma_final(C, T[s], T[s + 1], w=w)
 
-            elif word_index == w:
-                gamma_carry[j + 1], gamma_sum[j + 1] = gamma_final(
-                    gamma_carry[j], gamma_sum[j], alpha_sum[j], w=w
-                )
+    if from_limbs(T, w) >= from_limbs(n, w):
+        T_int = int(from_limbs(T, w)) - from_limbs(n, w)
+        T = to_limbs(T_int, s, w)
 
-            elif word_index > 2:
-                gamma_carry[j + 1], gamma_sum[j + 1] = gamma(
-                    n[i], gamma_sum[j], 0, 0, w=w
-                )
-
-        print("-" * 50)
-        print(f"Alpha sum: {[hex(int(val)) for val in alpha_sum]}")
-        print(f"Alpha carry: {[hex(int(val)) for val in alpha_carry]}")
-        print(f"Gamma sum: {[hex(int(val)) for val in gamma_sum]}")
-        print(f"Gamma carry: {[hex(int(val)) for val in gamma_carry]}")
-        print("-" * 50)
-
-        if limb_index > 1:
-            exit()
+    return T
 
 
 def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
@@ -138,9 +102,8 @@ def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
     )
     C_bar = from_limbs(
         montgomery_monpro_cios_systolic_array(
-            M, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
+            1, key_values.r2_mod_n, w, s, n, key_values.n_0_prime
         ),
-        w(1, key_values.r2_mod_n, w, s, n, key_values.n_0_prime),
         w,
     )
 
