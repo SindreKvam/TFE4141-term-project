@@ -35,7 +35,7 @@ end montgomery_modexp ;
 
 architecture rtl of montgomery_modexp is
     -- make finite state machine
-    type FSM is (ST_IDLE, ST_LOAD, ST_CALC, ST_HOLD);
+    type FSM is (ST_IDLE, ST_WAIT_FOR_MONPRO, ST_LOAD, ST_CALC, ST_HOLD);
     signal state : FSM;
 
     --make internal signals
@@ -70,9 +70,9 @@ begin
             rst_n => reset_n,
             --------------------------------------------------
             in_valid => monpro_in_valid, --left Monpro signals / right modexp signals
-            out_ready => monpro_out_ready,
-            in_ready => monpro_in_ready,
-            out_valid => monpro_out_valid,
+            out_ready => monpro_out_ready,  --output
+            in_ready => monpro_in_ready,    --input
+            out_valid => monpro_out_valid,  --input
             --------------------------------------------------
             a => a,
             b => b,
@@ -93,9 +93,15 @@ begin
         variable v_out_valid : std_logic; --temporary monpro in valid
         variable v_in_ready : std_logic; --variables are serial not concurrent--
 
+        variable v_monpro_in_valid : std_logic;
+        variable v_monpro_out_ready : std_logic;
+
     begin
         v_out_valid := '0';
         v_in_ready := '0';
+
+        v_monpro_in_valid := '0';
+        v_monpro_out_ready := '0';
 
     	if reset_n = '0' then
         	result <= (others => '0');
@@ -112,24 +118,27 @@ begin
           	---------------------------
           	when ST_IDLE =>
           	---------------------------
-
-                v_in_ready := '1'; -- ready to accept data
-                v_out_valid := '0'; -- output is not ready
-                
                 calc_type <= (others => '0');-- allways start new modexp with 0 --> M_bar <= monpro(1,(r*r)%n)
                 loop_counter <= (others => '0');
 
             	if valid_in = '1' then -- when modexp has valid_in change state
               		state <= ST_LOAD;
+
+                else
+                    v_monpro_in_valid := '0';
+                    v_monpro_out_ready := '0';
+
+                    v_in_ready := '1'; -- ready to accept data
+                    v_out_valid := '0'; -- output is not ready
             	end if;
+            
+            
+                
           	---------------------------
           	when ST_LOAD =>
           	---------------------------
-                v_in_ready := '0';
-                v_out_valid := '0';
-
-                monpro_out_ready <= '0';
-                monpro_in_valid <= '1'; --telling monpro there is data
+                v_monpro_out_ready := '0';
+                v_monpro_in_valid := '1'; --telling monpro there is data
                 
                 if calc_type = 0  then
                     a <= std_logic_vector(message); -- puts value 1 into a
@@ -145,15 +154,25 @@ begin
                     b <= C_bar;
                 else
                     state <= ST_IDLE; -- this state cant happen
+                    
                 end if;
 
-                if monpro_out_valid = '1' then -- monpro no longer waiting for input
-                    state <= ST_CALC; -- lets get the calculation
+                if monpro_in_ready = '1' then -- monpro no longer waiting for input
+                    state <= ST_WAIT_FOR_MONPRO; -- lets get the calculation
+
                 end if;
                 -- 0 --> M_bar <= monpro(M,(r*r)%n)
                 -- 1 --> C_bar <= monpro(1,(r*r)%n)
                 -- 2 --> C_bar <= monpro(C_bar, C_bar)
                 -- 3 --> C_bar <= monpro(M_bar, C_bar)
+
+            ---------------------------
+            when ST_WAIT_FOR_MONPRO =>
+            ---------------------------
+                if monpro_out_valid = '1' then
+                    state <= ST_CALC;
+
+                end if;
 
             ---------------------------    
           	when ST_CALC =>
@@ -161,8 +180,8 @@ begin
                 v_in_ready := '0';
                 v_out_valid := '0';
 
-                monpro_out_ready <= '1';
-                monpro_in_valid <= '0';
+                v_monpro_out_ready := '1';
+                v_monpro_in_valid := '0';
 
                 if calc_type = 0 then
                     M_bar <= monpro_data;
@@ -224,6 +243,8 @@ begin
             valid_out <= v_out_valid;
             ready_in <= v_in_ready;
 
+            monpro_out_ready <= v_monpro_out_ready;
+            monpro_in_valid <= v_monpro_in_valid;
 
       	end if;
     end process;
