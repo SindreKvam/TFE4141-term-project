@@ -223,7 +223,7 @@ begin
                     loop_counter <= loop_counter + 1;
                 
                 elsif calc_type = 4 then
-                    loop_counter <= loop_counter + 1; 
+                    state <= ST_HOLD; 
                     
                 else
                     calc_type <= calc_type; -- no change in calc type
@@ -235,8 +235,6 @@ begin
                 if loop_counter = C_block_size then
                     calc_type <= to_unsigned(4, 3);
                     state <= ST_LOAD;
-                elsif loop_counter > C_block_size then
-                    state <= ST_HOLD;
                 else
                     state <= ST_LOAD;
                 end if;
