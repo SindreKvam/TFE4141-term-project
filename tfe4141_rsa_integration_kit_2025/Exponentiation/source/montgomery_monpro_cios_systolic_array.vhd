@@ -109,25 +109,20 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     type T_FSM is (ST_IDLE, ST_CALC, ST_HOLD); -- Calc is short for Calculate btw.
     signal state : T_FSM;
 
+
+    --------------------------------------------------
+    -- Instruction set
+    --------------------------------------------------
+    type T_INSTRUCTION_SET is array(0 to 66) of std_logic_vector(127 downto 0);
+    signal instruction : std_logic_vector(127 downto 0);
+
+    subtype mux_alpha_carry_input is std_logic_vector(0 downto 0);
+    subtype mux_alpha_sum_input is std_logic_vector(1 downto 1);
+
+    subtype mux_alpha_final_sum_input is std_logic_vector(2 downto 2);
+
+
 begin
-
-    -- Renaming signals that always should be connected
-    in_beta_n_0 <= s_n(0);
-    in_beta_n_0_prime <= s_n_prime;
-
-    in_gamma_carry(0) <= out_beta_carry;
-    in_gamma_m(0) <= out_beta_m;
-    in_gamma_n(0) <= s_n(1);
-
-    in_alpha_final_sum <= out_gamma_final_sum_2;
-    in_gamma_final_sum_1 <= out_alpha_final_sum;
-    in_gamma_final_sum_2 <= out_alpha_final_carry;
-
-    -- Last gamma goes to gamma_last
-    in_gamma_final_carry <= out_gamma_carry(GC_NUM_GAMMA - 1);
-
-    in_alpha_final_carry <= out_alpha_carry(GC_NUM_ALPHA - 1);
-
 
     --------------------------------------------------
     -- Main process
@@ -276,6 +271,102 @@ begin
         end if; -- rising_edge
     end process monpro_proc;
 
+
+    
+    --------------------------------------------------
+    -- Mux for alpha 1
+    --------------------------------------------------
+    p_alpha_1_input_mux: process(all)
+    begin
+
+        -- TODO shift register for input a and b
+        in_alpha_a(0) <= (others => '0');
+        in_alpha_b(0) <= (others => '0');
+
+        case instruction(mux_alpha_carry_input'range) is
+            when "0" => in_alpha_carry(0) <= (others => '0');
+            when "1" => in_alpha_carry(0) <= out_gamma_sum(0);
+            when others =>
+        end case;
+
+        case instruction(mux_alpha_sum_input'range) is
+            when "00" => in_alpha_sum(0) <= (others => '0');
+            when "01" => in_alpha_sum(0) <= out_gamma_sum(0);
+            when "10" => in_alpha_sum(0) <= out_gamma_sum(1);
+            when others =>
+        end case;
+        
+    end process p_alpha_1_input_mux;
+    
+    --------------------------------------------------
+    -- Mux for alpha final
+    --------------------------------------------------
+    p_alpha_final_input_mux: process(all)
+    begin
+
+        in_alpha_final_carry <= out_alpha_carry(GC_NUM_ALPHA - 1);
+
+        case instruction(mux_alpha_final_sum_input'range) is
+            when "0" => in_alpha_final_sum <= (others => '0');
+            when "1" => in_alpha_final_sum <= out_gamma_final_sum_2;
+            when others =>
+        end case;
+
+    end process p_alpha_final_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for gamma 1
+    --------------------------------------------------
+    p_gamma_1_input_mux: process(all)
+    begin
+        
+        -- TODO shift register for n and m
+        -- Do we need to keep multiple versions of m stored to use different m per limb?
+        in_gamma_n(0) <= (others => '0');
+        in_gamma_m(0) <= out_beta_m;
+
+        in_gamma_carry(0) <= out_beta_carry;
+        in_gamma_sum(0) <= out_alpha_sum(0);
+
+    end process p_gamma_1_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for gamma final
+    --------------------------------------------------
+    p_gamma_final_input_mux: process(all)
+    begin
+        
+        in_gamma_final_carry <= out_gamma_carry(GC_NUM_GAMMA - 1);
+        in_gamma_final_sum_1 <= out_alpha_final_sum;
+        in_gamma_final_sum_2 <= out_alpha_final_carry;
+
+    end process p_gamma_final_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for beta
+    --------------------------------------------------
+    p_beta_input_mux: process(all)
+    begin
+
+        in_beta_sum <= out_alpha_sum(0);
+        in_beta_n_0 <= s_n(0);
+        in_beta_n_0_prime <= s_n_prime;
+
+    end process p_beta_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for last alpha
+    --------------------------------------------------
+    p_alpha_last_input_mux: process(all)
+    begin
+
+        
+
+    end process p_alpha_last_input_mux;
 
 
     --------------------------------------------------
