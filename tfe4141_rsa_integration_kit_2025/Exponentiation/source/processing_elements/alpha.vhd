@@ -6,12 +6,11 @@ use work.montgomery_pkg.all;
 
 entity alpha is
     generic(
-        GC_LIMB_WIDTH : integer := 16
+        GC_LIMB_WIDTH : integer := C_LIMB_WIDTH
     );
     port(
         clk : in std_logic;
         rst_n : in std_logic;
-        valid : in std_logic;
         --------------------------------------------------
         a : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
         b : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
@@ -51,21 +50,12 @@ begin
         elsif rising_edge(clk) then
         --------------------------------------------
 
-            if valid = '1' then
-
-                v_tmp_sum_result := unsigned(carry_in) + unsigned(sum_in);
-                v_tmp_mult_result := unsigned(a) * unsigned(b);
-                v_tmp_result := v_tmp_sum_result + v_tmp_mult_result;
-                
-                alpha_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
-                alpha_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
-
-            else
-
-                alpha_carry <= (others => '0');
-                alpha_sum <= (others => '0');
-
-            end if;
+            v_tmp_sum_result := unsigned(carry_in) + unsigned(sum_in);
+            v_tmp_mult_result := unsigned(a) * unsigned(b);
+            v_tmp_result := v_tmp_sum_result + v_tmp_mult_result;
+            
+            alpha_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
+            alpha_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
 
         --------------------------------------------
         end if;

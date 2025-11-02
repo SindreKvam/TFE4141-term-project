@@ -6,12 +6,11 @@ use work.montgomery_pkg.all;
 
 entity gamma is
     generic(
-        GC_LIMB_WIDTH : integer := 16
+        GC_LIMB_WIDTH : integer := C_LIMB_WIDTH
     );
     port(
         clk : in std_logic;
         rst_n : in std_logic;
-        valid : in std_logic;
         --------------------------------------------------
         n_i : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
         m : in std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
@@ -47,19 +46,10 @@ begin
         elsif rising_edge(clk) then
         --------------------------------------------
 
-            if valid = '1' then
-
-                v_tmp_result := unsigned(sum_in) + unsigned(n_i) * unsigned(m) + unsigned(carry_in);
-                
-                gamma_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
-                gamma_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
-
-            else
-
-                gamma_carry <= (others => '0');
-                gamma_sum <= (others => '0');
-
-            end if;
+            v_tmp_result := unsigned(sum_in) + unsigned(n_i) * unsigned(m) + unsigned(carry_in);
+            
+            gamma_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
+            gamma_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
 
         --------------------------------------------
         end if;
