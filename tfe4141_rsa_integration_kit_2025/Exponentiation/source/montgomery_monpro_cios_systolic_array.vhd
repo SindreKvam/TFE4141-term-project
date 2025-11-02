@@ -114,15 +114,43 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     -- Instruction set
     --------------------------------------------------
     type T_INSTRUCTION_SET is array(0 to 66) of std_logic_vector(127 downto 0);
+    signal instruction_set : T_INSTRUCTION_SET;
     signal instruction : std_logic_vector(127 downto 0);
 
-    subtype mux_alpha_carry_input is std_logic_vector(0 downto 0);
-    subtype mux_alpha_sum_input is std_logic_vector(1 downto 1);
+    subtype mux_alpha_1_carry_input is std_logic_vector(0 downto 0);
+    subtype mux_alpha_1_sum_input is std_logic_vector(2 downto 1);
 
-    subtype mux_alpha_final_sum_input is std_logic_vector(2 downto 2);
+    subtype mux_alpha_2_carry_input is std_logic_vector(3 downto 3);
+    subtype mux_alpha_2_sum_input is std_logic_vector(5 downto 4);
 
+    subtype mux_alpha_3_carry_input is std_logic_vector(6 downto 6);
+    subtype mux_alpha_3_sum_input is std_logic_vector(8 downto 7);
+
+    subtype mux_alpha_final_sum_input is std_logic_vector(9 downto 9);
+
+    subtype mux_gamma_2_carry_input is std_logic_vector(10 downto 10);
+    subtype mux_gamma_2_sum_input is std_logic_vector(11 downto 11);
+
+    subtype mux_gamma_3_carry_input is std_logic_vector(12 downto 12);
+    subtype mux_gamma_3_sum_input is std_logic_vector(13 downto 13);
+
+
+    --------------------------------------------------
+    -- Intermediate results
+    --------------------------------------------------
+    signal t : T_INTERMEDIATE_ARRAY;
 
 begin
+
+    t(0) <= out_gamma_sum(0);
+    t(1) <= out_gamma_sum(1);
+    t(2) <= out_gamma_sum(1);
+    t(3) <= out_gamma_sum(1);
+    t(4) <= out_gamma_sum(2);
+    t(5) <= out_gamma_sum(2);
+    t(6) <= out_gamma_sum(2);
+    t(7) <= out_gamma_final_sum_1;
+    t(8) <= out_gamma_final_sum_2;
 
     --------------------------------------------------
     -- Main process
@@ -131,14 +159,6 @@ begin
 
         variable v_out_valid : std_logic;
         variable v_in_ready : std_logic;
-
-        variable v_carry_sum : T_CARRY_SUM_ARRAY := (others=> (others => '0'));
-        variable v_carry : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
-
-        -- Intermediate result
-        variable v_t : T_INTERMEDIATE_ARRAY := (others => (others => '0'));
-        variable v_m : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-        variable v_m_temp : std_logic_vector(GC_LIMB_WIDTH * 2 - 1 downto 0);
 
     begin
 
@@ -165,15 +185,8 @@ begin
         --------------------------------------------------
 
             -- Reset all variables
-            -- v_out_valid := '0';
-            -- v_in_ready := '0';
-            --
-            -- v_carry_sum := (others => (others => '0'));
-            -- v_carry := (others => '0');
-            --
-            v_t := (others => (others => '0'));
-            -- v_m := (others => '0');
-            -- v_m_temp := (others => '0');
+            v_out_valid := '0';
+            v_in_ready := '0';
 
             --------------------------------------------------
             -- Finite State Machine
@@ -206,44 +219,14 @@ begin
                 when ST_CALC =>
                 --------------------------------------------------
 
-                --     for i in 0 to GC_NUM_LIMBS - 1 loop
-                --
-                --         v_carry := (others => '0');
-                --
-                --         for j in 0 to GC_NUM_LIMBS - 1 loop
-                --
-                --             v_carry_sum := carry_sum(v_t(j), s_a(j), s_b(i), v_carry);
-                --             v_carry := v_carry_sum(0);
-                --             v_t(j) := v_carry_sum(1);
-                --
-                --         end loop;
-                --
-                --         v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others=>'0'), (others => '0'), v_carry);
-                --         v_t(GC_NUM_LIMBS + 1) := v_carry_sum(0);
-                --         v_t(GC_NUM_LIMBS) := v_carry_sum(1);
-                --
-                --         v_carry := (others => '0');
-                --         v_m_temp := std_logic_vector(unsigned(v_t(0)) * unsigned(s_n_prime));
-                --         v_m := v_m_temp(GC_NUM_LIMBS - 1 downto 0);
-                --
-                --         v_carry_sum := carry_sum(v_t(0), v_m, s_n(0), (others => '0'));
-                --         v_carry := v_carry_sum(0);
-                --
-                --         for j in 1 to GC_NUM_LIMBS - 1 loop
-                --
-                --             v_carry_sum := carry_sum(v_t(j), v_m, s_n(j), v_carry);
-                --             v_carry := v_carry_sum(0);
-                --             v_t(j-1) := v_carry_sum(1);
-                --
-                --         end loop;
-                --
-                --         v_carry_sum := carry_sum(v_t(GC_NUM_LIMBS), (others => '0'), (others => '0'), v_carry);
-                --         v_carry := v_carry_sum(0);
-                --         v_t(GC_NUM_LIMBS-1) := v_carry_sum(1);
-                --
-                --         v_t(GC_NUM_LIMBS) := std_logic_vector(unsigned(v_t(GC_NUM_LIMBS + 1)) + unsigned(v_carry));
-                --
-                --     end loop;
+                    --------------------------------------------------
+                    -- Go through the entire instruction set
+                    --------------------------------------------------
+                    for i in 0 to instruction_set'length - 1 loop
+
+                        instruction <= instruction_set(i);
+
+                    end loop;
 
                 --------------------------------------------------
                 when ST_HOLD =>
@@ -265,14 +248,13 @@ begin
             in_ready <= v_in_ready;
 
             for i in 0 to GC_NUM_LIMBS - 1 loop
-                u(GC_LIMB_WIDTH + GC_LIMB_WIDTH * i - 1 downto GC_LIMB_WIDTH * i) <= v_t(i);
+                u(GC_LIMB_WIDTH + GC_LIMB_WIDTH * i - 1 downto GC_LIMB_WIDTH * i) <= t(i);
             end loop;
             
         end if; -- rising_edge
     end process monpro_proc;
 
 
-    
     --------------------------------------------------
     -- Mux for alpha 1
     --------------------------------------------------
@@ -280,16 +262,16 @@ begin
     begin
 
         -- TODO shift register for input a and b
-        in_alpha_a(0) <= (others => '0');
-        in_alpha_b(0) <= (others => '0');
+        in_alpha_a(0) <= s_a(0);
+        in_alpha_b(0) <= s_b(0);
 
-        case instruction(mux_alpha_carry_input'range) is
+        case instruction(mux_alpha_1_carry_input'range) is
             when "0" => in_alpha_carry(0) <= (others => '0');
-            when "1" => in_alpha_carry(0) <= out_gamma_sum(0);
+            when "1" => in_alpha_carry(0) <= out_alpha_carry(0);
             when others =>
         end case;
 
-        case instruction(mux_alpha_sum_input'range) is
+        case instruction(mux_alpha_1_sum_input'range) is
             when "00" => in_alpha_sum(0) <= (others => '0');
             when "01" => in_alpha_sum(0) <= out_gamma_sum(0);
             when "10" => in_alpha_sum(0) <= out_gamma_sum(1);
@@ -297,6 +279,59 @@ begin
         end case;
         
     end process p_alpha_1_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for second alpha module
+    --------------------------------------------------
+    p_alpha_2_input_mux: process(all)
+    begin
+
+        -- TODO: shift register
+        in_alpha_a(1) <= s_a(1);
+        in_alpha_b(1) <= s_b(1);
+
+        case instruction(mux_alpha_2_carry_input'range) is
+            when "0" => in_alpha_carry(1) <= out_alpha_carry(0);
+            when "1" => in_alpha_carry(1) <= out_alpha_carry(1);
+            when others =>
+        end case;
+
+        case instruction(mux_alpha_2_sum_input'range) is
+            when "00" => in_alpha_sum(1) <= (others => '0');
+            when "01" => in_alpha_sum(1) <= out_gamma_sum(1);
+            when "10" => in_alpha_sum(1) <= out_gamma_sum(2);
+            when others =>
+        end case;
+
+    end process p_alpha_2_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for last alpha module
+    --------------------------------------------------
+    p_alpha_3_input_mux: process(all)
+    begin
+
+        -- TODO: shift register
+        in_alpha_a(2) <= s_a(2);
+        in_alpha_b(2) <= s_b(2);
+        
+        case instruction(mux_alpha_3_carry_input'range) is
+            when "0" => in_alpha_carry(2) <= out_alpha_carry(1);
+            when "1" => in_alpha_carry(2) <= out_alpha_carry(2);
+            when others =>
+        end case;
+
+        case instruction(mux_alpha_3_sum_input'range) is
+            when "00" => in_alpha_sum(2) <= (others => '0');
+            when "01" => in_alpha_sum(2) <= out_gamma_sum(2);
+            when "10" => in_alpha_sum(2) <= out_gamma_final_sum_1;
+            when others =>
+        end case;
+
+    end process p_alpha_3_input_mux;
+
     
     --------------------------------------------------
     -- Mux for alpha final
@@ -331,6 +366,58 @@ begin
 
     end process p_gamma_1_input_mux;
 
+    
+    --------------------------------------------------
+    -- Mux for gamma 2
+    --------------------------------------------------
+    p_gamma_2_input_mux: process(all)
+    begin
+        
+        -- TODO shift register for n and m
+        -- Do we need to keep multiple versions of m stored to use different m per limb?
+        in_gamma_n(1) <= (others => '0');
+        in_gamma_m(1) <= out_beta_m;
+
+        case instruction(mux_gamma_2_carry_input'range) is
+            when "0" => in_gamma_carry(1) <= out_gamma_carry(0);
+            when "1" => in_gamma_carry(1) <= out_gamma_carry(1);
+            when others =>
+        end case;
+
+        case instruction(mux_gamma_2_sum_input'range) is
+            when "0" => in_gamma_sum(1) <= out_alpha_sum(0);
+            when "1" => in_gamma_sum(1) <= out_alpha_sum(1);
+            when others =>
+        end case;
+
+    end process p_gamma_2_input_mux;
+
+
+    --------------------------------------------------
+    -- Mux for the last gamma module
+    --------------------------------------------------
+    p_gamma_3_input_mux: process(all)
+    begin
+        
+        -- TODO shift register for n and m
+        -- Do we need to keep multiple versions of m stored to use different m per limb?
+        in_gamma_n(2) <= (others => '0');
+        in_gamma_m(2) <= out_beta_m;
+
+        case instruction(mux_gamma_3_carry_input'range) is
+            when "0" => in_gamma_carry(2) <= out_gamma_carry(1);
+            when "1" => in_gamma_carry(2) <= out_gamma_carry(2);
+            when others =>
+        end case;
+
+        case instruction(mux_gamma_3_sum_input'range) is
+            when "0" => in_gamma_sum(2) <= out_alpha_sum(1);
+            when "1" => in_gamma_sum(2) <= out_alpha_sum(2);
+            when others =>
+        end case;
+
+    end process p_gamma_3_input_mux;
+
 
     --------------------------------------------------
     -- Mux for gamma final
@@ -359,20 +446,7 @@ begin
 
 
     --------------------------------------------------
-    -- Mux for last alpha
-    --------------------------------------------------
-    p_alpha_last_input_mux: process(all)
-    begin
-
-        
-
-    end process p_alpha_last_input_mux;
-
-
-    --------------------------------------------------
     -- Instantiate all processing elements
-    --------------------------------------------------
-
     --------------------------------------------------
     g_alpha_modules: for i in 0 to GC_NUM_ALPHA - 1 generate
         i_alpha: entity work.alpha(rtl)
