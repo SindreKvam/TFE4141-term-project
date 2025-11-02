@@ -3,6 +3,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 use work.montgomery_pkg.all;
+use work.instruction_pkg.all;
 
 entity montgomery_monpro_cios_systolic_array is
     generic(
@@ -113,9 +114,8 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     --------------------------------------------------
     -- Instruction set
     --------------------------------------------------
-    type T_INSTRUCTION_SET is array(0 to 66) of std_logic_vector(127 downto 0);
-    signal instruction_set : T_INSTRUCTION_SET;
-    signal instruction : std_logic_vector(127 downto 0);
+    signal instruction_set : T_INSTRUCTION_SET := C_INSTRUCTION_SET;
+    signal instruction : std_logic_vector(C_INSTRUCTION_LENGTH - 1 downto 0);
 
     subtype mux_alpha_1_carry_input is std_logic_vector(0 downto 0);
     subtype mux_alpha_1_sum_input is std_logic_vector(2 downto 1);
@@ -133,6 +133,8 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
 
     subtype mux_gamma_3_carry_input is std_logic_vector(12 downto 12);
     subtype mux_gamma_3_sum_input is std_logic_vector(13 downto 13);
+
+    signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS := 0;
 
 
     --------------------------------------------------
@@ -176,6 +178,7 @@ begin
 
             -- Reset state machine
             state <= ST_IDLE;
+            instruction_counter <= 0;
 
             -- Reset output
             u <= (others => '0');
@@ -209,6 +212,7 @@ begin
 
                         s_n_prime <= n_prime;
 
+                        instruction_counter <= 0;
                         state <= ST_CALC;
 
                     else
@@ -222,11 +226,13 @@ begin
                     --------------------------------------------------
                     -- Go through the entire instruction set
                     --------------------------------------------------
-                    for i in 0 to instruction_set'length - 1 loop
+                    instruction <= instruction_set(instruction_counter);
 
-                        instruction <= instruction_set(i);
-
-                    end loop;
+                    if instruction_counter = C_NUMBER_OF_INSTRUCTIONS - 1 then
+                        state <= ST_HOLD;
+                    else
+                        instruction_counter <= instruction_counter + 1;
+                    end if;
 
                 --------------------------------------------------
                 when ST_HOLD =>
