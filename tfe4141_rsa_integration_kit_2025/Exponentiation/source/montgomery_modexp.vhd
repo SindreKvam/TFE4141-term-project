@@ -35,7 +35,7 @@ end montgomery_modexp ;
 
 architecture rtl of montgomery_modexp is
     -- make finite state machine
-    type FSM is (ST_IDLE, ST_WAIT_FOR_MONPRO, ST_LOAD, ST_CALC, ST_HOLD);
+    type FSM is (ST_IDLE, ST_HANDSHAKE, ST_LOAD, ST_CALC, ST_HOLD);
     signal state : FSM;
 
     --make internal signals
@@ -95,8 +95,8 @@ begin
         variable v_out_valid : std_logic; --temporary monpro in valid
         variable v_in_ready : std_logic; --variables are serial not concurrent--
 
-        variable v_monpro_in_valid : std_logic;
-        variable v_monpro_out_ready : std_logic;
+        variable v_monpro_in_valid : std_logic; --valid data to send to monpro
+        variable v_monpro_out_ready : std_logic; --ready to recieve from monpro
 
     begin
         v_out_valid := '0';
@@ -124,8 +124,11 @@ begin
                 loop_counter <= (others => '0');
 
             	if valid_in = '1' then -- when modexp has valid_in change state
-              		state <= ST_LOAD;
-
+              		state <= ST_HANDSHAKE;
+                    
+                    a <= message;
+                    b <= r_stuff;
+                    v_monpro_in_valid := '1'; -- monpro can now recieve valid data
                 else
                     v_monpro_in_valid := '0';
                     v_monpro_out_ready := '0';
@@ -134,18 +137,23 @@ begin
                     v_out_valid := '0'; -- output is not ready
             	end if;
             
-            
+            ---------------------------
+            when ST_HANDSHAKE =>
+            ---------------------------
+                v_monpro_in_valid := '1'; -- telling monpro the data is ready untill i get a response
+                if monpro_in_ready = '1' then
+                --hanshake is done
+                    state <= ST_CALC;
+                end if;    
                 
           	---------------------------
           	when ST_LOAD =>
           	---------------------------
-                v_monpro_out_ready := '0';
-                v_monpro_in_valid := '1'; --telling monpro there is data
-                
-                if calc_type = 0  then
-                    a <= std_logic_vector(message); -- puts value 1 into a
-                    b <= std_logic_vector(r_stuff);
-                elsif calc_type = 1 then
+                -- all controll are 0 nothing gets in and nothing gets out    
+                state <= ST_HANDSHAKE; --allways maximum in this state one cycle 
+
+                --calctype 0 is handeled by IDLE and HANDSHAKE
+                if calc_type = 1 then
                     a <= std_logic_vector(to_unsigned(1, a'length)); -- puts value 1 into a
                     b <= std_logic_vector(r_stuff);
                 elsif calc_type = 2 then
@@ -161,102 +169,94 @@ begin
                     state <= ST_IDLE; -- this state cant happen
                     
                 end if;
-
-                if monpro_in_ready = '1' then -- monpro no longer waiting for input
-                    state <= ST_WAIT_FOR_MONPRO; -- lets get the calculation
-
-                end if;
                 -- 0 --> M_bar <= monpro(M,(r*r)%n)
                 -- 1 --> C_bar <= monpro(1,(r*r)%n)
                 -- 2 --> C_bar <= monpro(C_bar, C_bar)
                 -- 3 --> C_bar <= monpro(M_bar, C_bar)
 
-            ---------------------------
-            when ST_WAIT_FOR_MONPRO =>
-            ---------------------------
-                if monpro_out_valid = '1' then
-                    state <= ST_CALC;
-
-                end if;
-
             ---------------------------    
           	when ST_CALC =>
             ---------------------------
-                v_in_ready := '0';
-                v_out_valid := '0';
+                v_monpro_out_ready := '1'; -- ready to recieve from monpro
+                if monpro_out_valid = '1' then
+                    --handshake done
 
-                v_monpro_out_ready := '1';
-                v_monpro_in_valid := '0';
+                    --------
+                    --LOAD--
+                    --------
+                    if calc_type = 0 then
+                        M_bar <= monpro_data;
 
-                if calc_type = 0 then
-                    M_bar <= monpro_data;
+                    elsif calc_type = 1 then
+                        C_bar <= monpro_data;
 
-                elsif calc_type = 1 then
-                    C_bar <= monpro_data;
+                    elsif calc_type = 2 then
+                        C_bar <= monpro_data;
 
-                elsif calc_type = 2 then
-                    C_bar <= monpro_data;
+                    elsif calc_type = 3 then
+                        C_bar <= monpro_data;
+                    
+                    elsif calc_type = 4 then
+                        result <= monpro_data;
+                        
+                    else
+                        state <= ST_IDLE; -- can not happen
+                    end if;
+                    -- 0 --> M_bar <= monpro(1,(r*r)%n)
+                    -- 1 --> C_bar <= monpro(1,(r*r)%n)
+                    -- 2 --> C_bar <= monpro(C_bar, C_bar)
+                    -- 3 --> C_bar <= monpro(M_bar, C_bar)
+                    -- 4 --> result <= monpro(C_bar, 1)
 
-                elsif calc_type = 3 then
-                    C_bar <= monpro_data;
+                    -----------------------
+                    -- check next calc type
+                    -----------------------
+                    if calc_type < 2 then
+                        calc_type <= calc_type + 1;
+
+                    elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
+                        calc_type <= calc_type + 1;
+
+                    elsif calc_type = 3 then
+                        calc_type <= calc_type - 1;-- go back in the loop
+                        loop_counter <= loop_counter + 1;
+                    
+                    else
+                        calc_type <= calc_type; -- no change in calc type
+                        loop_counter <= loop_counter + 1; 
+                        
+                    end if;
+
+                    -------------------
+                    --Figure next state
+                    -------------------
+                    -- is the calculation done ?
+                    
+                    if calc_type = 4 then -- meaning we are done with calc
+                        state <= ST_HOLD;
+                        v_out_valid := '1'; -- on next clk this module has valid output
+
+                    elsif loop_counter = C_block_size - 1 then
+                        calc_type <= to_unsigned(4, 3); --calctype = 4
+                        --we are done with calc on next cycle
+                        state <= ST_LOAD;
                 
-                elsif calc_type = 4 then
-                    result <= monpro_data;
-                    
+                    elsif loop_counter < C_block_size - 1 then
+                        state <= ST_LOAD;
 
-                else
-                    state <= ST_IDLE; -- can not happen
+                    else
+                        state <= ST_IDLE;
+                    end if;
                 end if;
-                -- 0 --> M_bar <= monpro(1,(r*r)%n)
-                -- 1 --> C_bar <= monpro(1,(r*r)%n)
-                -- 2 --> C_bar <= monpro(C_bar, C_bar)
-                -- 3 --> C_bar <= monpro(M_bar, C_bar)
 
-
-                -- check next calc type
-                if calc_type < 2 then
-                    calc_type <= calc_type + 1;
-
-                elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
-                    calc_type <= calc_type + 1;
-
-                elsif calc_type = 3 then
-                    calc_type <= calc_type - 1;-- go back in the loop
-                    loop_counter <= loop_counter + 1;
                 
-                elsif calc_type = 4 then
-                    done_with_calc <= to_unsigned(1,1);
-                    
-                else
-                    calc_type <= calc_type; -- no change in calc type
-                    loop_counter <= loop_counter + 1; 
-                    
-                end if;
-
-                -- is the calculation done ?
-                if done_with_calc = 1 then
-                    state <= ST_HOLD;
-
-                elsif loop_counter >= C_block_size - 1 then
-                    calc_type <= to_unsigned(4, 3); --calctype = 4
-                    done_with_calc <= to_unsigned(1,1); --we are done with calc on next cycle
-                    state <= ST_LOAD;
-                
-                elsif loop_counter <= C_block_size - 1 then
-                    state <= ST_LOAD;
-
-        
-                    
-                else
-                    state <= ST_IDLE;
-                end if;
 
 
             when ST_HOLD =>
-                v_in_ready := '0';
-                v_out_valid := '1';
+                v_out_valid := '1'; -- my output is available untill something on the outside
+                                    -- is ready to input more
 
-                if ready_out = '1' then
+                if ready_in = '1' then
                     state <= ST_IDLE; --is this change to fast?
                 end if;
                 
