@@ -135,9 +135,11 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     subtype mux_gamma_3_sum_input is std_logic_vector(13 downto 13);
 
     subtype mux_alpha_a_input is std_logic_vector(15 downto 14);
-    subtype mux_alpha_b_input is std_logic_vector(18 downto 16);
 
-    signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS := 0;
+    signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS - 1 := 0;
+    signal alpha_1_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
+    signal alpha_2_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
+    signal alpha_3_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
 
 
     --------------------------------------------------
@@ -181,7 +183,13 @@ begin
 
             -- Reset state machine
             state <= ST_IDLE;
+
+            -- Reset counters
             instruction_counter <= 0;
+
+            alpha_1_b_counter <= 0;
+            alpha_2_b_counter <= 0;
+            alpha_3_b_counter <= 0;
 
             -- Reset output
             u <= (others => '0');
@@ -215,6 +223,12 @@ begin
 
                         s_n_prime <= n_prime;
 
+                        -- Reset counters to be used
+                        instruction_counter <= 0;
+                        alpha_1_b_counter <= 0;
+                        alpha_2_b_counter <= 0;
+                        alpha_3_b_counter <= 0;
+
                         state <= ST_CALC;
 
                     else
@@ -235,6 +249,22 @@ begin
                         instruction_counter <= 0;
                     else
                         instruction_counter <= instruction_counter + 1;
+                    end if;
+
+                    if instruction_counter mod 3 = 0 and instruction_counter /= 0 then
+
+                        if alpha_1_b_counter < GC_NUM_LIMBS - 1 then
+                            alpha_1_b_counter <= alpha_1_b_counter + 1;
+                        end if;
+
+                        if alpha_1_b_counter >= 1 and alpha_2_b_counter < GC_NUM_LIMBS - 1 then
+                            alpha_2_b_counter <= alpha_2_b_counter + 1;
+                        end if;
+
+                        if alpha_2_b_counter >= 1 and alpha_3_b_counter < GC_NUM_LIMBS - 1 then
+                            alpha_3_b_counter <= alpha_3_b_counter + 1;
+                        end if;
+
                     end if;
 
                 --------------------------------------------------
@@ -270,12 +300,12 @@ begin
     p_alpha_1_input_mux: process(all)
     begin
 
-        -- TODO shift register for input a and b
-        in_alpha_b(0) <= s_b(0);
+        in_alpha_b(0) <= s_b(alpha_1_b_counter);
 
         case instruction(mux_alpha_1_carry_input'range) is
             when "0" => in_alpha_carry(0) <= (others => '0');
             when "1" => in_alpha_carry(0) <= out_alpha_carry(0);
+            when others =>
         end case;
 
         case instruction(mux_alpha_1_sum_input'range) is
@@ -301,12 +331,12 @@ begin
     p_alpha_2_input_mux: process(all)
     begin
 
-        -- TODO: shift register
-        in_alpha_b(1) <= s_b(1);
+        in_alpha_b(1) <= s_b(alpha_2_b_counter);
 
         case instruction(mux_alpha_2_carry_input'range) is
             when "0" => in_alpha_carry(1) <= out_alpha_carry(0);
             when "1" => in_alpha_carry(1) <= out_alpha_carry(1);
+            when others =>
         end case;
 
         case instruction(mux_alpha_2_sum_input'range) is
@@ -332,12 +362,12 @@ begin
     p_alpha_3_input_mux: process(all)
     begin
 
-        -- TODO: shift register
-        in_alpha_b(2) <= s_b(2);
+        in_alpha_b(2) <= s_b(alpha_3_b_counter);
         
         case instruction(mux_alpha_3_carry_input'range) is
             when "0" => in_alpha_carry(2) <= out_alpha_carry(1);
             when "1" => in_alpha_carry(2) <= out_alpha_carry(2);
+            when others =>
         end case;
 
         case instruction(mux_alpha_3_sum_input'range) is
@@ -367,6 +397,7 @@ begin
         case instruction(mux_alpha_final_sum_input'range) is
             when "0" => in_alpha_final_sum <= (others => '0');
             when "1" => in_alpha_final_sum <= out_gamma_final_sum_2;
+            when others =>
         end case;
 
     end process p_alpha_final_input_mux;
@@ -403,11 +434,13 @@ begin
         case instruction(mux_gamma_2_carry_input'range) is
             when "0" => in_gamma_carry(1) <= out_gamma_carry(0);
             when "1" => in_gamma_carry(1) <= out_gamma_carry(1);
+            when others =>
         end case;
 
         case instruction(mux_gamma_2_sum_input'range) is
             when "0" => in_gamma_sum(1) <= out_alpha_sum(0);
             when "1" => in_gamma_sum(1) <= out_alpha_sum(1);
+            when others =>
         end case;
 
     end process p_gamma_2_input_mux;
@@ -427,11 +460,13 @@ begin
         case instruction(mux_gamma_3_carry_input'range) is
             when "0" => in_gamma_carry(2) <= out_gamma_carry(1);
             when "1" => in_gamma_carry(2) <= out_gamma_carry(2);
+            when others =>
         end case;
 
         case instruction(mux_gamma_3_sum_input'range) is
             when "0" => in_gamma_sum(2) <= out_alpha_sum(1);
             when "1" => in_gamma_sum(2) <= out_alpha_sum(2);
+            when others =>
         end case;
 
     end process p_gamma_3_input_mux;

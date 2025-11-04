@@ -73,6 +73,18 @@ class AlphaFinalMux:
         return f"{self.sum_input}"
 
 
+@dataclass
+class AlphaAMux:
+    a: int
+    a_input: int = None
+
+    def __post_init__(self):
+        self.a_input: Instruction = Instruction(instruction=self.a, word_size=2)
+
+    def __repr__(self):
+        return f"{self.a_input}"
+
+
 class Alpha1Carry(IntEnum):
     zero = 0
     alpha_1 = 1
@@ -159,6 +171,8 @@ def main():
     instruction_set = InstructionSet()
 
     for clock_cycle in range(NUM_CLOCK_CYCLES):
+        a_input = clock_cycle % 3
+
         # Alpha modules
         if clock_cycle % 3 == 0:
             # The start of each "block"
@@ -235,8 +249,18 @@ def main():
             sum_instruction=gamma_3_sum_instruction,
         )
 
+        alpha_a = AlphaAMux(a=a_input)
+
         instruction_word = InstructionWord(
-            instruction_word=[gamma_3, gamma_2, alpha_final, alpha_3, alpha_2, alpha_1]
+            instruction_word=[
+                alpha_a,
+                gamma_3,
+                gamma_2,
+                alpha_final,
+                alpha_3,
+                alpha_2,
+                alpha_1,
+            ]
         )
 
         instruction_set.instruction_set.append(instruction_word)
@@ -251,7 +275,7 @@ use ieee.numeric_std.all;
 package {PACKAGE_NAME} is
 
     constant C_NUMBER_OF_INSTRUCTIONS : integer := {NUM_CLOCK_CYCLES};
-    constant C_INSTRUCTION_LENGTH : integer := 14;
+    constant C_INSTRUCTION_LENGTH : integer := {len(str(instruction_word))};
 
     type T_INSTRUCTION_SET is array(0 to C_NUMBER_OF_INSTRUCTIONS - 1) of std_logic_vector(C_INSTRUCTION_LENGTH - 1 downto 0);
 
