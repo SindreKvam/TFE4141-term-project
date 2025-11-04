@@ -2,6 +2,8 @@ library ieee ;
     use ieee.std_logic_1164.all ;
     use ieee.numeric_std.all ;
 
+use work.montgomery_pkg.all;
+
 entity montgomery_modexp is
     generic (
 		C_block_size : integer := 16
@@ -111,6 +113,7 @@ begin
             loop_counter <= (others => '0');
             calc_type <= (others => '0');
             state <= ST_IDLE;
+            v_in_ready := '1'; -- ready to accept data
 
       	elsif rising_edge(clk) then
             ------------------------
@@ -167,6 +170,7 @@ begin
                     b <= std_logic_vector(to_unsigned(1, C_block_size));
                 else
                     state <= ST_IDLE; -- this state cant happen
+                    v_in_ready := '1'; -- ready to accept data
                     
                 end if;
                 -- 0 --> M_bar <= monpro(M,(r*r)%n)
@@ -201,6 +205,7 @@ begin
                         
                     else
                         state <= ST_IDLE; -- can not happen
+                        v_in_ready := '1'; -- ready to accept data
                     end if;
                     -- 0 --> M_bar <= monpro(1,(r*r)%n)
                     -- 1 --> C_bar <= monpro(1,(r*r)%n)
@@ -211,20 +216,28 @@ begin
                     -----------------------
                     -- check next calc type
                     -----------------------
-                    if calc_type < 2 then
-                        calc_type <= calc_type + 1;
+                    if loop_counter < C_block_size then
+                        if calc_type < 2 then
+                            calc_type <= calc_type + 1;
 
-                    elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
-                        calc_type <= calc_type + 1;
+                        elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
+                            calc_type <= calc_type + 1;
 
-                    elsif calc_type = 3 then
-                        calc_type <= calc_type - 1;-- go back in the loop
-                        loop_counter <= loop_counter + 1;
+                        elsif calc_type = 3 then
+                            if loop_counter < C_block_size - 1 then
+                                calc_type <= calc_type - 1;-- go back in the loop, but not if last bit
+
+                            elsif loop_counter = C_block_size - 1 then
+                                calc_type <= TO_UNSIGNED(4, 3); --if it was last bit, go to calctype 4
+                                    
+                            end if;
+                            loop_counter <= loop_counter + 1;
                     
-                    else
-                        calc_type <= calc_type; -- no change in calc type
-                        loop_counter <= loop_counter + 1; 
+                        else
+                            calc_type <= calc_type; -- no change in calc type
+                            loop_counter <= loop_counter + 1; 
                         
+                        end if;
                     end if;
 
                     -------------------
@@ -236,16 +249,17 @@ begin
                         state <= ST_HOLD;
                         v_out_valid := '1'; -- on next clk this module has valid output
 
-                    elsif loop_counter = C_block_size - 1 then
+                    elsif loop_counter = C_block_size then
                         calc_type <= to_unsigned(4, 3); --calctype = 4
                         --we are done with calc on next cycle
                         state <= ST_LOAD;
                 
-                    elsif loop_counter < C_block_size - 1 then
+                    elsif loop_counter < C_block_size then
                         state <= ST_LOAD;
 
                     else
                         state <= ST_IDLE;
+                        v_in_ready := '1'; -- ready to accept data
                     end if;
                 end if;
 
@@ -256,8 +270,9 @@ begin
                 v_out_valid := '1'; -- my output is available untill something on the outside
                                     -- is ready to input more
 
-                if ready_in = '1' then
+                if ready_out = '1' then
                     state <= ST_IDLE; --is this change to fast?
+                    v_in_ready := '1'; -- ready to accept data
                 end if;
                 
             ---------------------------

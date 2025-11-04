@@ -33,7 +33,7 @@ def montgomery_modexp(M, e, n, key_values: RsaKeyValues):
 
         C_bar = montgomery_monpro(C_bar, C_bar, key_values)
         if bit == 1:
-            C_bar = montgomery_monpro(M_bar, C_bar, key_values)
+            
     return montgomery_monpro(C_bar, 1, key_values)
 
 

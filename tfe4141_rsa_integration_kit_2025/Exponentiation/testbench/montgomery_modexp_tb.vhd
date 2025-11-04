@@ -216,6 +216,8 @@ begin
             end if;
             key <= e;
 
+            report integer'image(key'RIGHT(1));
+
             --wait one clock cycle
             wait until falling_edge(clk);
             wait until rising_edge(clk);
