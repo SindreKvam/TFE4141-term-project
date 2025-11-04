@@ -135,6 +135,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     subtype mux_gamma_3_sum_input is std_logic_vector(13 downto 13);
 
     subtype mux_alpha_a_input is std_logic_vector(15 downto 14);
+    subtype mux_gamma_n_input is std_logic_vector(17 downto 16);
 
     signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS - 1 := 0;
     signal alpha_1_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
@@ -411,7 +412,7 @@ begin
         
         -- TODO shift register for n and m
         -- Do we need to keep multiple versions of m stored to use different m per limb?
-        in_gamma_n(0) <= (others => '0');
+        in_gamma_n(0) <= s_n(1);
         in_gamma_m(0) <= out_beta_m;
 
         in_gamma_carry(0) <= out_beta_carry;
@@ -443,6 +444,13 @@ begin
             when others =>
         end case;
 
+        case instruction(mux_gamma_n_input'range) is
+            when "00" => in_gamma_n(1) <= s_n(2);
+            when "01" => in_gamma_n(1) <= s_n(3);
+            when "10" => in_gamma_n(1) <= s_n(4);
+            when others => in_gamma_n(1) <= (others => '0');
+        end case;
+
     end process p_gamma_2_input_mux;
 
 
@@ -467,6 +475,13 @@ begin
             when "0" => in_gamma_sum(2) <= out_alpha_sum(1);
             when "1" => in_gamma_sum(2) <= out_alpha_sum(2);
             when others =>
+        end case;
+
+        case instruction(mux_gamma_n_input'range) is
+            when "00" => in_gamma_n(2) <= s_n(5);
+            when "01" => in_gamma_n(2) <= s_n(6);
+            when "10" => in_gamma_n(2) <= s_n(7);
+            when others => in_gamma_n(2) <= (others => '0');
         end case;
 
     end process p_gamma_3_input_mux;

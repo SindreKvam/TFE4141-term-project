@@ -144,6 +144,18 @@ class GammaMux:
 
 
 @dataclass
+class GammaNMux:
+    n: int
+    n_input: int = None
+
+    def __post_init__(self):
+        self.n_input: Instruction = Instruction(instruction=self.n, word_size=2)
+
+    def __repr__(self):
+        return f"{self.n_input}"
+
+
+@dataclass
 class Gamma2Sum(IntEnum):
     alpha_1 = 0
     alpha_2 = 1
@@ -172,6 +184,7 @@ def main():
 
     for clock_cycle in range(NUM_CLOCK_CYCLES):
         a_input = clock_cycle % 3
+        n_input = clock_cycle % 3
 
         # Alpha modules
         if clock_cycle % 3 == 0:
@@ -250,9 +263,11 @@ def main():
         )
 
         alpha_a = AlphaAMux(a=a_input)
+        gamma_n = GammaNMux(n=n_input)
 
         instruction_word = InstructionWord(
             instruction_word=[
+                gamma_n,
                 alpha_a,
                 gamma_3,
                 gamma_2,
