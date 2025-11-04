@@ -29,36 +29,27 @@ begin
     
     p_alpha: process(clk, rst_n)
 
-        variable v_tmp_sum_result : unsigned(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
-        variable v_tmp_mult_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
-        variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
+        variable v_tmp_result : T_CARRY_SUM_ARRAY;
 
     begin
 
-        v_tmp_sum_result := (others => '0');
-        v_tmp_mult_result := (others => '0');
-        v_tmp_result := (others => '0');
+        if rising_edge(clk) then
 
-        --------------------------------------------
-        if rst_n = '0' then
-        --------------------------------------------
+            if rst_n = '0' then
 
-            alpha_carry <= (others => '0');
-            alpha_sum <= (others => '0');
+                alpha_carry <= (others => '0');
+                alpha_sum <= (others => '0');
 
-        --------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------
+            else
 
-            v_tmp_sum_result := unsigned(carry_in) + unsigned(sum_in);
-            v_tmp_mult_result := unsigned(a) * unsigned(b);
-            v_tmp_result := v_tmp_sum_result + v_tmp_mult_result;
-            
-            alpha_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
-            alpha_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
+                v_tmp_result := carry_sum(carry_in, a, b, sum_in);
 
-        --------------------------------------------
+                alpha_carry <= v_tmp_result(0);
+                alpha_sum <= v_tmp_result(1);
+
+            end if;
         end if;
+
     end process p_alpha;
     
 end architecture rtl;
