@@ -29,30 +29,32 @@ begin
     
     p_gamma: process(clk, rst_n)
 
-        variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
+        variable v_tmp_result : T_CARRY_SUM_ARRAY;
 
     begin
 
-        v_tmp_result := (others => '0');
+        if rising_edge(clk) then
 
-        --------------------------------------------
-        if rst_n = '0' then
-        --------------------------------------------
+            --------------------------------------------
+            if rst_n = '0' then
+            --------------------------------------------
 
-            gamma_carry <= (others => '0');
-            gamma_sum <= (others => '0');
+                gamma_carry <= (others => '0');
+                gamma_sum <= (others => '0');
 
-        --------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------
+            --------------------------------------------
+            else
+            --------------------------------------------
 
-            v_tmp_result := unsigned(sum_in) + unsigned(n_i) * unsigned(m) + unsigned(carry_in);
-            
-            gamma_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
-            gamma_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
+                v_tmp_result := carry_sum(sum_in, n_i, m, carry_in);
 
-        --------------------------------------------
+                gamma_carry <= v_tmp_result(0);
+                gamma_sum <= v_tmp_result(1);
+
+            --------------------------------------------
+            end if;
         end if;
+
     end process p_gamma;
     
 end architecture rtl;

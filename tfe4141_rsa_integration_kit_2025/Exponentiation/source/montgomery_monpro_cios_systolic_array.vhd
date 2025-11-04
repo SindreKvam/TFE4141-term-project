@@ -59,30 +59,30 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     signal in_alpha_b : T_ALPHA_SIGNALS := (others => (others => '0'));
     signal in_alpha_carry : T_ALPHA_SIGNALS := (others => (others => '0'));
     signal in_alpha_sum : T_ALPHA_SIGNALS := (others => (others => '0'));
-    signal out_alpha_carry : T_ALPHA_SIGNALS;
-    signal out_alpha_sum : T_ALPHA_SIGNALS;
+    signal out_alpha_carry : T_ALPHA_SIGNALS := (others => (others => '0'));
+    signal out_alpha_sum : T_ALPHA_SIGNALS := (others => (others => '0'));
 
 
     --------------------------------------------------
     -- Gamma module signals
     --------------------------------------------------
     type T_GAMMA_SIGNALS is array(0 to GC_NUM_GAMMA - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal in_gamma_n : T_GAMMA_SIGNALS;
-    signal in_gamma_m : T_GAMMA_SIGNALS;
-    signal in_gamma_carry : T_GAMMA_SIGNALS;
-    signal in_gamma_sum : T_GAMMA_SIGNALS;
-    signal out_gamma_carry : T_GAMMA_SIGNALS;
-    signal out_gamma_sum : T_GAMMA_SIGNALS;
+    signal in_gamma_n : T_GAMMA_SIGNALS := (others => (others => '0'));
+    signal in_gamma_m : T_GAMMA_SIGNALS := (others => (others => '0'));
+    signal in_gamma_carry : T_GAMMA_SIGNALS := (others => (others => '0'));
+    signal in_gamma_sum : T_GAMMA_SIGNALS := (others => (others => '0'));
+    signal out_gamma_carry : T_GAMMA_SIGNALS := (others => (others => '0'));
+    signal out_gamma_sum : T_GAMMA_SIGNALS := (others => (others => '0'));
 
 
     --------------------------------------------------
     -- Beta module signals
     --------------------------------------------------
-    signal in_beta_sum : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal in_beta_n_0 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal in_beta_n_0_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal out_beta_m : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal out_beta_carry : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
+    signal in_beta_sum : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+    signal in_beta_n_0 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+    signal in_beta_n_0_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+    signal out_beta_m : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
+    signal out_beta_carry : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0');
 
 
     --------------------------------------------------
@@ -138,9 +138,19 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     subtype mux_gamma_n_input is std_logic_vector(17 downto 16);
 
     signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS - 1 := 0;
-    signal alpha_1_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
-    signal alpha_2_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
-    signal alpha_3_b_counter : integer range 0 to C_NUM_LIMBS - 1 := 0;
+
+    signal alpha_1_b_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal alpha_2_b_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal alpha_3_b_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+
+
+    type T_BETA_M is array(0 to GC_NUM_LIMBS - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
+    signal beta_m : T_BETA_M := (others => (others => '0'));
+    signal active_beta_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+
+    signal gamma_1_beta_m_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal gamma_2_beta_m_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal gamma_3_beta_m_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
 
 
     --------------------------------------------------
@@ -192,6 +202,12 @@ begin
             alpha_2_b_counter <= 0;
             alpha_3_b_counter <= 0;
 
+            active_beta_counter <= 0;
+
+            gamma_1_beta_m_counter <= 0;
+            gamma_2_beta_m_counter <= 0;
+            gamma_3_beta_m_counter <= 0;
+
             -- Reset output
             u <= (others => '0');
 
@@ -225,11 +241,17 @@ begin
                         s_n_prime <= n_prime;
 
                         -- Reset counters to be used
-                        instruction_counter <= 0;
+                        instruction_counter <= 1;
                         alpha_1_b_counter <= 0;
                         alpha_2_b_counter <= 0;
                         alpha_3_b_counter <= 0;
 
+                        active_beta_counter <= 0;
+                        gamma_1_beta_m_counter <= 0;
+                        gamma_2_beta_m_counter <= 0;
+                        gamma_3_beta_m_counter <= 0;
+
+                        instruction <= instruction_set(0);
                         state <= ST_CALC;
 
                     else
@@ -252,6 +274,9 @@ begin
                         instruction_counter <= instruction_counter + 1;
                     end if;
 
+                    --------------------------------------------------
+                    -- Handle the counter for the input b
+                    --------------------------------------------------
                     if instruction_counter mod 3 = 0 and instruction_counter /= 0 then
 
                         if alpha_1_b_counter < GC_NUM_LIMBS - 1 then
@@ -264,6 +289,38 @@ begin
 
                         if alpha_2_b_counter >= 1 and alpha_3_b_counter < GC_NUM_LIMBS - 1 then
                             alpha_3_b_counter <= alpha_3_b_counter + 1;
+                        end if;
+
+                    end if;
+
+                    --------------------------------------------------
+                    -- Handle the counters to store beta_m values
+                    --------------------------------------------------
+                    if instruction_counter mod 3 = 0 and instruction_counter /= 0 and active_beta_counter <= GC_NUM_LIMBS - 1 then
+
+                        beta_m(active_beta_counter) <= out_beta_m;
+
+                        if active_beta_counter < GC_NUM_LIMBS then
+                            active_beta_counter <= active_beta_counter + 1;
+                        end if;
+
+                    end if;
+
+                    --------------------------------------------------
+                    -- Handle the gamma_beta_m counters
+                    --------------------------------------------------
+                    if instruction_counter mod 3 = 0 and instruction_counter > 3 then
+
+                        if gamma_1_beta_m_counter < GC_NUM_LIMBS - 1 then
+                            gamma_1_beta_m_counter <= gamma_1_beta_m_counter + 1;
+                        end if;
+
+                        if gamma_2_beta_m_counter >= 1 and gamma_2_beta_m_counter < GC_NUM_LIMBS - 1 then
+                            gamma_2_beta_m_counter <= gamma_2_beta_m_counter + 1;
+                        end if;
+
+                        if gamma_3_beta_m_counter >= 1 and gamma_3_beta_m_counter < GC_NUM_LIMBS - 1 then
+                            gamma_3_beta_m_counter <= gamma_3_beta_m_counter + 1;
                         end if;
 
                     end if;
@@ -410,8 +467,6 @@ begin
     p_gamma_1_input_mux: process(all)
     begin
         
-        -- TODO shift register for n and m
-        -- Do we need to keep multiple versions of m stored to use different m per limb?
         in_gamma_n(0) <= s_n(1);
         in_gamma_m(0) <= out_beta_m;
 
@@ -427,10 +482,7 @@ begin
     p_gamma_2_input_mux: process(all)
     begin
         
-        -- TODO shift register for n and m
-        -- Do we need to keep multiple versions of m stored to use different m per limb?
-        in_gamma_n(1) <= (others => '0');
-        in_gamma_m(1) <= out_beta_m;
+        in_gamma_m(1) <= beta_m(gamma_2_beta_m_counter);
 
         case instruction(mux_gamma_2_carry_input'range) is
             when "0" => in_gamma_carry(1) <= out_gamma_carry(0);
@@ -460,10 +512,7 @@ begin
     p_gamma_3_input_mux: process(all)
     begin
         
-        -- TODO shift register for n and m
-        -- Do we need to keep multiple versions of m stored to use different m per limb?
-        in_gamma_n(2) <= (others => '0');
-        in_gamma_m(2) <= out_beta_m;
+        in_gamma_m(2) <= beta_m(gamma_3_beta_m_counter);
 
         case instruction(mux_gamma_3_carry_input'range) is
             when "0" => in_gamma_carry(2) <= out_gamma_carry(1);
