@@ -13,7 +13,7 @@ def carry_sum(a: int, x: int, y: int, b: int, width=16):
     """
 
     bitmask = (1 << width) - 1
-    calculated_value = int(a + x * y + b)
+    calculated_value = int(int(a) + int(x) * int(y) + int(b))
     s = calculated_value & bitmask
     c = calculated_value >> width
 
