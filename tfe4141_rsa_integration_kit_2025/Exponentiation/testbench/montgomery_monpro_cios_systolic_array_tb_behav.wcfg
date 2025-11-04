@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="montgomery_monpro_cios_systolic_array_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="instruction_pkg" />
+            <top_module name="montgomery_monpro_cios_systolic_array_tb" />
+            <top_module name="montgomery_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="300.501 ns"></ZoomEndTime>
+      <Cursor1Time time="0.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="203"></NameColumnWidth>
+      <ValueColumnWidth column_width="166"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="15" />
+   <wvobject fp_name="divider978" type="divider">
+      <obj_property name="label">Control signals</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/rst_n">
+      <obj_property name="ElementShortName">rst_n</obj_property>
+      <obj_property name="ObjectShortName">rst_n</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group977">
+      <obj_property name="label">Control signals</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/in_valid">
+         <obj_property name="ElementShortName">in_valid</obj_property>
+         <obj_property name="ObjectShortName">in_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/in_ready">
+         <obj_property name="ElementShortName">in_ready</obj_property>
+         <obj_property name="ObjectShortName">in_ready</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/out_valid">
+         <obj_property name="ElementShortName">out_valid</obj_property>
+         <obj_property name="ObjectShortName">out_valid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/montgomery_monpro_cios_systolic_array_tb/out_ready">
+         <obj_property name="ElementShortName">out_ready</obj_property>
+         <obj_property name="ObjectShortName">out_ready</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="divider545" type="divider">
+      <obj_property name="label">Input values</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group38">
+      <obj_property name="label">Input values</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/a">
+         <obj_property name="ElementShortName">a[255:0]</obj_property>
+         <obj_property name="ObjectShortName">a[255:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/b">
+         <obj_property name="ElementShortName">b[255:0]</obj_property>
+         <obj_property name="ObjectShortName">b[255:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/n">
+         <obj_property name="ElementShortName">n[255:0]</obj_property>
+         <obj_property name="ObjectShortName">n[255:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/n_prime">
+         <obj_property name="ElementShortName">n_prime[31:0]</obj_property>
+         <obj_property name="ObjectShortName">n_prime[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="group" fp_name="group39">
+      <obj_property name="label">Loaded input values</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/s_a">
+         <obj_property name="ElementShortName">s_a[0:7][31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_a[0:7][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/s_b">
+         <obj_property name="ElementShortName">s_b[0:7][31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_b[0:7][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/s_n">
+         <obj_property name="ElementShortName">s_n[0:7][31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_n[0:7][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/s_n_prime">
+         <obj_property name="ElementShortName">s_n_prime[31:0]</obj_property>
+         <obj_property name="ObjectShortName">s_n_prime[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="divider975" type="divider">
+      <obj_property name="label">Output values</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/u">
+      <obj_property name="ElementShortName">u[255:0]</obj_property>
+      <obj_property name="ObjectShortName">u[255:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider37" type="divider">
+      <obj_property name="label">Intermediate results</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/instruction_counter">
+      <obj_property name="ElementShortName">instruction_counter</obj_property>
+      <obj_property name="ObjectShortName">instruction_counter</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/instruction">
+      <obj_property name="ElementShortName">instruction[13:0]</obj_property>
+      <obj_property name="ObjectShortName">instruction[13:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/state">
+      <obj_property name="ElementShortName">state</obj_property>
+      <obj_property name="ObjectShortName">state</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider916" type="divider">
+      <obj_property name="label">Processing elements</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group917">
+      <obj_property name="label">Alpha</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/in_alpha_a">
+         <obj_property name="ElementShortName">in_alpha_a[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">in_alpha_a[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/in_alpha_b">
+         <obj_property name="ElementShortName">in_alpha_b[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">in_alpha_b[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/in_alpha_carry">
+         <obj_property name="ElementShortName">in_alpha_carry[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">in_alpha_carry[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/in_alpha_sum">
+         <obj_property name="ElementShortName">in_alpha_sum[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">in_alpha_sum[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/out_alpha_carry">
+         <obj_property name="ElementShortName">out_alpha_carry[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">out_alpha_carry[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/montgomery_monpro_cios_systolic_array_tb/DUT/out_alpha_sum">
+         <obj_property name="ElementShortName">out_alpha_sum[0:2][31:0]</obj_property>
+         <obj_property name="ObjectShortName">out_alpha_sum[0:2][31:0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
