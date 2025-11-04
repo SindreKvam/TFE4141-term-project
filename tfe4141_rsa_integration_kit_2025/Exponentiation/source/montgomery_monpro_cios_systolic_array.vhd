@@ -20,8 +20,8 @@ entity montgomery_monpro_cios_systolic_array is
     -- Control signals
     --------------------------------------------------
         in_valid : in std_logic;
-        in_ready : out std_logic;
-        out_valid : out std_logic;
+        in_ready : out std_logic := '0';
+        out_valid : out std_logic := '0';
         out_ready : in std_logic;
     --------------------------------------------------
     -- Values to be multiplicated
@@ -45,20 +45,20 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     -- Limb arrays to store input signals
     --------------------------------------------------
     type T_LIMBS_ARRAY is array(0 to GC_NUM_LIMBS - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal s_a : T_LIMBS_ARRAY;
-    signal s_b : T_LIMBS_ARRAY;
-    signal s_n : T_LIMBS_ARRAY;
-    signal s_n_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0); -- for CIOS we only need the first part of n_prime
+    signal s_a : T_LIMBS_ARRAY := (others => (others => '0'));
+    signal s_b : T_LIMBS_ARRAY := (others => (others => '0'));
+    signal s_n : T_LIMBS_ARRAY := (others => (others => '0'));
+    signal s_n_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0'); -- for CIOS we only need the first part of n_prime
 
 
     --------------------------------------------------
     -- Alpha module signals
     --------------------------------------------------
     type T_ALPHA_SIGNALS is array(0 to GC_NUM_ALPHA - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
-    signal in_alpha_a : T_ALPHA_SIGNALS;
-    signal in_alpha_b : T_ALPHA_SIGNALS;
-    signal in_alpha_carry : T_ALPHA_SIGNALS;
-    signal in_alpha_sum : T_ALPHA_SIGNALS;
+    signal in_alpha_a : T_ALPHA_SIGNALS := (others => (others => '0'));
+    signal in_alpha_b : T_ALPHA_SIGNALS := (others => (others => '0'));
+    signal in_alpha_carry : T_ALPHA_SIGNALS := (others => (others => '0'));
+    signal in_alpha_sum : T_ALPHA_SIGNALS := (others => (others => '0'));
     signal out_alpha_carry : T_ALPHA_SIGNALS;
     signal out_alpha_sum : T_ALPHA_SIGNALS;
 
@@ -108,7 +108,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     -- Finite State Machine
     --------------------------------------------------
     type T_FSM is (ST_IDLE, ST_CALC, ST_HOLD); -- Calc is short for Calculate btw.
-    signal state : T_FSM;
+    signal state : T_FSM := ST_IDLE;
 
 
     --------------------------------------------------
@@ -134,13 +134,16 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     subtype mux_gamma_3_carry_input is std_logic_vector(12 downto 12);
     subtype mux_gamma_3_sum_input is std_logic_vector(13 downto 13);
 
+    subtype mux_alpha_a_input is std_logic_vector(15 downto 14);
+    subtype mux_alpha_b_input is std_logic_vector(18 downto 16);
+
     signal instruction_counter : integer range 0 to C_NUMBER_OF_INSTRUCTIONS := 0;
 
 
     --------------------------------------------------
     -- Intermediate results
     --------------------------------------------------
-    signal t : T_INTERMEDIATE_ARRAY;
+    signal t : T_INTERMEDIATE_ARRAY := (others => (others => '0'));
 
 begin
 
@@ -212,7 +215,6 @@ begin
 
                         s_n_prime <= n_prime;
 
-                        instruction_counter <= 0;
                         state <= ST_CALC;
 
                     else
@@ -228,8 +230,9 @@ begin
                     --------------------------------------------------
                     instruction <= instruction_set(instruction_counter);
 
-                    if instruction_counter = C_NUMBER_OF_INSTRUCTIONS - 1 then
+                    if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 1 then
                         state <= ST_HOLD;
+                        instruction_counter <= 0;
                     else
                         instruction_counter <= instruction_counter + 1;
                     end if;
@@ -268,22 +271,27 @@ begin
     begin
 
         -- TODO shift register for input a and b
-        in_alpha_a(0) <= s_a(0);
         in_alpha_b(0) <= s_b(0);
 
         case instruction(mux_alpha_1_carry_input'range) is
             when "0" => in_alpha_carry(0) <= (others => '0');
             when "1" => in_alpha_carry(0) <= out_alpha_carry(0);
-            when others =>
         end case;
 
         case instruction(mux_alpha_1_sum_input'range) is
             when "00" => in_alpha_sum(0) <= (others => '0');
             when "01" => in_alpha_sum(0) <= out_gamma_sum(0);
             when "10" => in_alpha_sum(0) <= out_gamma_sum(1);
-            when others =>
+            when others => in_alpha_sum(0) <= (others => '0');
         end case;
-        
+
+        case instruction(mux_alpha_a_input'range) is
+            when "00" => in_alpha_a(0) <= s_a(0);
+            when "01" => in_alpha_a(0) <= s_a(1);
+            when "10" => in_alpha_a(0) <= s_a(2);
+            when others => in_alpha_a(0) <= (others => '0');
+        end case;
+
     end process p_alpha_1_input_mux;
 
 
@@ -294,20 +302,25 @@ begin
     begin
 
         -- TODO: shift register
-        in_alpha_a(1) <= s_a(1);
         in_alpha_b(1) <= s_b(1);
 
         case instruction(mux_alpha_2_carry_input'range) is
             when "0" => in_alpha_carry(1) <= out_alpha_carry(0);
             when "1" => in_alpha_carry(1) <= out_alpha_carry(1);
-            when others =>
         end case;
 
         case instruction(mux_alpha_2_sum_input'range) is
             when "00" => in_alpha_sum(1) <= (others => '0');
             when "01" => in_alpha_sum(1) <= out_gamma_sum(1);
             when "10" => in_alpha_sum(1) <= out_gamma_sum(2);
-            when others =>
+            when others => in_alpha_sum(1) <= (others => '0');
+        end case;
+
+        case instruction(mux_alpha_a_input'range) is
+            when "00" => in_alpha_a(1) <= s_a(3);
+            when "01" => in_alpha_a(1) <= s_a(4);
+            when "10" => in_alpha_a(1) <= s_a(5);
+            when others => in_alpha_a(1) <= (others => '0');
         end case;
 
     end process p_alpha_2_input_mux;
@@ -320,20 +333,24 @@ begin
     begin
 
         -- TODO: shift register
-        in_alpha_a(2) <= s_a(2);
         in_alpha_b(2) <= s_b(2);
         
         case instruction(mux_alpha_3_carry_input'range) is
             when "0" => in_alpha_carry(2) <= out_alpha_carry(1);
             when "1" => in_alpha_carry(2) <= out_alpha_carry(2);
-            when others =>
         end case;
 
         case instruction(mux_alpha_3_sum_input'range) is
             when "00" => in_alpha_sum(2) <= (others => '0');
             when "01" => in_alpha_sum(2) <= out_gamma_sum(2);
             when "10" => in_alpha_sum(2) <= out_gamma_final_sum_1;
-            when others =>
+            when others => in_alpha_sum(2) <= (others => '0');
+        end case;
+
+        case instruction(mux_alpha_a_input'range) is
+            when "00" => in_alpha_a(2) <= s_a(6);
+            when "01" => in_alpha_a(2) <= s_a(7);
+            when others => in_alpha_a(2) <= (others => '0');
         end case;
 
     end process p_alpha_3_input_mux;
@@ -350,7 +367,6 @@ begin
         case instruction(mux_alpha_final_sum_input'range) is
             when "0" => in_alpha_final_sum <= (others => '0');
             when "1" => in_alpha_final_sum <= out_gamma_final_sum_2;
-            when others =>
         end case;
 
     end process p_alpha_final_input_mux;
@@ -387,13 +403,11 @@ begin
         case instruction(mux_gamma_2_carry_input'range) is
             when "0" => in_gamma_carry(1) <= out_gamma_carry(0);
             when "1" => in_gamma_carry(1) <= out_gamma_carry(1);
-            when others =>
         end case;
 
         case instruction(mux_gamma_2_sum_input'range) is
             when "0" => in_gamma_sum(1) <= out_alpha_sum(0);
             when "1" => in_gamma_sum(1) <= out_alpha_sum(1);
-            when others =>
         end case;
 
     end process p_gamma_2_input_mux;
@@ -413,13 +427,11 @@ begin
         case instruction(mux_gamma_3_carry_input'range) is
             when "0" => in_gamma_carry(2) <= out_gamma_carry(1);
             when "1" => in_gamma_carry(2) <= out_gamma_carry(2);
-            when others =>
         end case;
 
         case instruction(mux_gamma_3_sum_input'range) is
             when "0" => in_gamma_sum(2) <= out_alpha_sum(1);
             when "1" => in_gamma_sum(2) <= out_alpha_sum(2);
-            when others =>
         end case;
 
     end process p_gamma_3_input_mux;
@@ -467,7 +479,7 @@ begin
                 carry_in => in_alpha_carry(i),
                 sum_in => in_alpha_sum(i),
                 alpha_carry => out_alpha_carry(i),
-                alpha_sum => out_alpha_carry(i)
+                alpha_sum => out_alpha_sum(i)
             );
     end generate;
     --------------------------------------------------
