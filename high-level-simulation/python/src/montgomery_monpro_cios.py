@@ -17,7 +17,7 @@ def carry_sum(a: int, x: int, y: int, b: int, width=16):
     s = calculated_value & bitmask
     c = calculated_value >> width
 
-    return c, s
+    return int(c), int(s)
 
 
 def to_limbs(x, s, width) -> np.ndarray:

@@ -157,18 +157,11 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     -- Intermediate results
     --------------------------------------------------
     signal t : T_INTERMEDIATE_ARRAY := (others => (others => '0'));
+    signal capture : std_logic := '0';
+    signal capture_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
 
 begin
 
-    t(0) <= out_gamma_sum(0);
-    t(1) <= out_gamma_sum(1);
-    t(2) <= out_gamma_sum(1);
-    t(3) <= out_gamma_sum(1);
-    t(4) <= out_gamma_sum(2);
-    t(5) <= out_gamma_sum(2);
-    t(6) <= out_gamma_sum(2);
-    t(7) <= out_gamma_final_sum_1;
-    t(8) <= out_gamma_final_sum_2;
 
     --------------------------------------------------
     -- Main process
@@ -177,6 +170,7 @@ begin
 
         variable v_out_valid : std_logic;
         variable v_in_ready : std_logic;
+        variable v_capture : std_logic;
 
     begin
 
@@ -218,6 +212,7 @@ begin
             -- Reset all variables
             v_out_valid := '0';
             v_in_ready := '0';
+            v_capture := '0';
 
             --------------------------------------------------
             -- Finite State Machine
@@ -229,6 +224,8 @@ begin
                 --------------------------------------------------
                 when ST_IDLE =>
                 --------------------------------------------------
+                    v_in_ready := '1';
+
                     if in_valid = '1' then
 
                         -- Load input to registers
@@ -252,10 +249,9 @@ begin
                         gamma_3_beta_m_counter <= 0;
 
                         instruction <= instruction_set(0);
+
                         state <= ST_CALC;
 
-                    else
-                        v_in_ready := '1';
                     end if;
 
                 --------------------------------------------------
@@ -270,6 +266,7 @@ begin
                     if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 1 then
                         state <= ST_HOLD;
                         instruction_counter <= 0;
+                        v_out_valid := '1';
                     else
                         instruction_counter <= instruction_counter + 1;
                     end if;
@@ -325,6 +322,14 @@ begin
 
                     end if;
 
+                    --------------------------------------------------
+                    -- Handle when to capture the values that should be on the output
+                    --------------------------------------------------
+                    if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 9 then
+                        v_capture := '1';
+                    end if;
+
+
                 --------------------------------------------------
                 when ST_HOLD =>
                 --------------------------------------------------
@@ -343,6 +348,7 @@ begin
             
             out_valid <= v_out_valid;
             in_ready <= v_in_ready;
+            capture <= v_capture;
 
             for i in 0 to GC_NUM_LIMBS - 1 loop
                 u(GC_LIMB_WIDTH + GC_LIMB_WIDTH * i - 1 downto GC_LIMB_WIDTH * i) <= t(i);
@@ -351,6 +357,48 @@ begin
         end if; -- rising_edge
     end process monpro_proc;
 
+
+    --------------------------------------------------
+    -- Capture output
+    --------------------------------------------------
+    p_capture_output: process(clk)
+    begin
+
+        if rising_edge(clk) then
+
+            if rst_n = '0' then
+
+                capture_counter <= 0;
+            
+            else
+
+                case capture_counter is
+                    when 0 => t(0) <= out_gamma_sum(0);
+                    when 1 => t(1) <= out_gamma_sum(1);
+                    when 2 => t(2) <= out_gamma_sum(1);
+                    when 3 => t(3) <= out_gamma_sum(1);
+                    when 4 => t(4) <= out_gamma_sum(2);
+                    when 5 => t(5) <= out_gamma_sum(2);
+                    when 6 => t(6) <= out_gamma_sum(2);
+                    when 7 => 
+                        t(7) <= out_gamma_final_sum_1;
+                        t(8) <= out_gamma_final_sum_2;
+                    when others =>
+                end case;
+
+                if capture = '1' then
+                    capture_counter <= capture_counter + 1;
+                end if;
+
+                if capture_counter > GC_NUM_LIMBS - 1 then
+                    capture_counter <= 0;
+                end if;
+
+            end if;
+
+        end if;
+
+    end process p_capture_output;
 
     --------------------------------------------------
     -- Mux for alpha 1

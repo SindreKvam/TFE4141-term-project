@@ -1,6 +1,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use std.env.all;
 
 use work.montgomery_pkg.all;
 use work.instruction_pkg.all;
@@ -15,7 +16,7 @@ architecture tb of montgomery_monpro_cios_systolic_array_tb is
     constant C_CLOCK_PERIOD : time := 1 sec / C_CLOCK_FREQUENCY;
     
     signal clk : std_logic := '0';
-    signal rst_n : std_logic := '1';
+    signal rst_n : std_logic := '0';
 
     signal in_valid : std_logic := '0';
     signal in_ready : std_logic;
@@ -51,7 +52,10 @@ begin
     p_stimuli: process
     begin
 
-        rst_n <= '1' after C_CLOCK_PERIOD;
+        wait for C_CLOCK_PERIOD / 2;
+        rst_n <= '1' after 3 * C_CLOCK_PERIOD;
+
+        wait for 3 * C_CLOCK_PERIOD;
 
         n <= x"99925173ad65686715385ea800cd28120288fc70a9bc98dd4c90d676f8ff768d" after 3 * C_CLOCK_PERIOD;
         n_prime <= x"8833c3bb" after 3 * C_CLOCK_PERIOD;
@@ -60,14 +64,18 @@ begin
         b <= x"56ddf8b43061ad3dbcd1757244d1a19e2e8c849dde4817e55bb29d1c20c06364" after 3 * C_CLOCK_PERIOD;
 
         in_valid <= '1' after 4 * C_CLOCK_PERIOD;
+        out_ready <= '1' after 4 * C_CLOCK_PERIOD;
 
-        out_ready <= '1' after 10 * C_CLOCK_PERIOD;
+        wait for 4 * C_CLOCK_PERIOD;
         
-        wait for 20 * C_CLOCK_PERIOD;
 
-        assert u /= x"8abe76b2cf6e603497a8ba867eddc580b943f5690777e388fae627e05449851a" report "Incorrect result" severity note;
+        wait for 33 * C_CLOCK_PERIOD;
+
+        assert u = x"8abe76b2cf6e603497a8ba867eddc580b943f5690777e388fae627e05449851a" report
+        "Incorrect result" severity error;
 
         report "Testbench finished";
+        finish;
 
 
     end process p_stimuli;
