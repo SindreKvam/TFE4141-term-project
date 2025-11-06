@@ -83,6 +83,8 @@ begin
 			valid_out => msgout_valid,
 			result    => msgout_data ,
 			modulus   => key_n       ,
+            n_prime   => key_n_prime ,
+            r_squared => key_r_squared_mod_n,
 			clk       => clk         ,
 			reset_n   => reset_n
 		);
