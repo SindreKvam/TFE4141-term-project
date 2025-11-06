@@ -202,9 +202,6 @@ begin
             gamma_2_beta_m_counter <= 0;
             gamma_3_beta_m_counter <= 0;
 
-            -- Reset output
-            u <= (others => '0');
-
         --------------------------------------------------
         elsif rising_edge(clk) then
         --------------------------------------------------
@@ -306,17 +303,17 @@ begin
                     --------------------------------------------------
                     -- Handle the gamma_beta_m counters
                     --------------------------------------------------
-                    if instruction_counter mod 3 = 0 and instruction_counter > 3 then
+                    if instruction_counter mod 3 = 0 then
 
                         if gamma_1_beta_m_counter < GC_NUM_LIMBS - 1 then
                             gamma_1_beta_m_counter <= gamma_1_beta_m_counter + 1;
                         end if;
 
-                        if gamma_2_beta_m_counter >= 1 and gamma_2_beta_m_counter < GC_NUM_LIMBS - 1 then
+                        if gamma_1_beta_m_counter >= 1 and gamma_2_beta_m_counter < GC_NUM_LIMBS - 1 then
                             gamma_2_beta_m_counter <= gamma_2_beta_m_counter + 1;
                         end if;
 
-                        if gamma_3_beta_m_counter >= 1 and gamma_3_beta_m_counter < GC_NUM_LIMBS - 1 then
+                        if gamma_2_beta_m_counter >= 1 and gamma_3_beta_m_counter < GC_NUM_LIMBS - 1 then
                             gamma_3_beta_m_counter <= gamma_3_beta_m_counter + 1;
                         end if;
 
@@ -350,12 +347,19 @@ begin
             in_ready <= v_in_ready;
             capture <= v_capture;
 
-            for i in 0 to GC_NUM_LIMBS - 1 loop
-                u(GC_LIMB_WIDTH + GC_LIMB_WIDTH * i - 1 downto GC_LIMB_WIDTH * i) <= t(i);
-            end loop;
-            
+                        
         end if; -- rising_edge
+
     end process monpro_proc;
+
+    u(GC_LIMB_WIDTH - 1 downto 0) <= t(0);
+    u(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) <= t(1);
+    u(GC_LIMB_WIDTH * 3 - 1 downto GC_LIMB_WIDTH * 2) <= t(2);
+    u(GC_LIMB_WIDTH * 4 - 1 downto GC_LIMB_WIDTH * 3) <= t(3);
+    u(GC_LIMB_WIDTH * 5 - 1 downto GC_LIMB_WIDTH * 4) <= t(4);
+    u(GC_LIMB_WIDTH * 6 - 1 downto GC_LIMB_WIDTH * 5) <= t(5);
+    u(GC_LIMB_WIDTH * 7 - 1 downto GC_LIMB_WIDTH * 6) <= t(6);
+    u(GC_LIMB_WIDTH * 8 - 1 downto GC_LIMB_WIDTH * 7) <= t(7);
 
 
     --------------------------------------------------
@@ -369,29 +373,34 @@ begin
             if rst_n = '0' then
 
                 capture_counter <= 0;
+                t <= (others => (others => '0'));
             
             else
 
-                case capture_counter is
-                    when 0 => t(0) <= out_gamma_sum(0);
-                    when 1 => t(1) <= out_gamma_sum(1);
-                    when 2 => t(2) <= out_gamma_sum(1);
-                    when 3 => t(3) <= out_gamma_sum(1);
-                    when 4 => t(4) <= out_gamma_sum(2);
-                    when 5 => t(5) <= out_gamma_sum(2);
-                    when 6 => t(6) <= out_gamma_sum(2);
-                    when 7 => 
-                        t(7) <= out_gamma_final_sum_1;
-                        t(8) <= out_gamma_final_sum_2;
-                    when others =>
-                end case;
+                if state <= ST_CALC then
 
-                if capture = '1' then
-                    capture_counter <= capture_counter + 1;
-                end if;
+                    case capture_counter is
+                        when 0 => t(0) <= out_gamma_sum(0);
+                        when 1 => t(1) <= out_gamma_sum(1);
+                        when 2 => t(2) <= out_gamma_sum(1);
+                        when 3 => t(3) <= out_gamma_sum(1);
+                        when 4 => t(4) <= out_gamma_sum(2);
+                        when 5 => t(5) <= out_gamma_sum(2);
+                        when 6 => t(6) <= out_gamma_sum(2);
+                        when 7 => 
+                            t(7) <= out_gamma_final_sum_1;
+                            t(8) <= out_gamma_final_sum_2;
+                        when others =>
+                    end case;
 
-                if capture_counter > GC_NUM_LIMBS - 1 then
-                    capture_counter <= 0;
+                    if capture = '1' then
+                        capture_counter <= capture_counter + 1;
+                    end if;
+
+                    if capture_counter > GC_NUM_LIMBS - 1 then
+                        capture_counter <= 0;
+                    end if;
+
                 end if;
 
             end if;

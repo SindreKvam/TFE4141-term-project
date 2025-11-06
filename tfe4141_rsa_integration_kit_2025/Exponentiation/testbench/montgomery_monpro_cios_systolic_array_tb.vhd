@@ -67,12 +67,20 @@ begin
         out_ready <= '1' after 4 * C_CLOCK_PERIOD;
 
         wait for 4 * C_CLOCK_PERIOD;
-        
+
+        out_ready <= '0' after 2 * C_CLOCK_PERIOD;
 
         wait for 33 * C_CLOCK_PERIOD;
 
+        out_ready <= '1' after 2 * C_CLOCK_PERIOD;
+        
+        out_ready <= '0' after 4 * C_CLOCK_PERIOD;
+
+
         assert u = x"8abe76b2cf6e603497a8ba867eddc580b943f5690777e388fae627e05449851a" report
         "Incorrect result" severity error;
+
+        wait for 10 * C_CLOCK_PERIOD;
 
         report "Testbench finished";
         finish;
