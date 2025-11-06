@@ -201,7 +201,7 @@ def montgomery_modexp(M, e, n, w, s, key_values: RsaKeyValues):
 
 if __name__ == "__main__":
     k = 256
-    word_size = 16
+    word_size = 32
     num_limbs = k // word_size
 
     n = 0x99925173AD65686715385EA800CD28120288FC70A9BC98DD4C90D676F8FF768D
