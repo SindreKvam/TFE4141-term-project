@@ -25,7 +25,7 @@ end montgomery_modexp_tb;
 
 architecture sim of montgomery_modexp_tb is
 
-    constant clk_hz : integer := 10e6;
+    constant clk_hz : integer := 100e6;
     constant clk_period : time := 1 sec / clk_hz;
 
     --input control
@@ -208,7 +208,7 @@ begin
         wait until rising_edge(clk);
         write_all: for i in 3 downto 0 loop
             --ready_for_push is initialized as 1
-            message <= testMessages(i);
+            message <= x"0000000011111111222222223333333344444444555555556666666677777777";--testMessages(i);
             valid_in <= '1';
 
             if (ready_in = '0') then

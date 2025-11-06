@@ -317,6 +317,7 @@ begin
 
                     if ready_out = '1' then
                         state <= ST_IDLE;
+                        v_in_ready := '1';
                         v_out_valid := '0';
                     end if;
                     
