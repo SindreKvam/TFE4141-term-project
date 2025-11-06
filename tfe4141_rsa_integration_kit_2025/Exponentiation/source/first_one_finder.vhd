@@ -7,7 +7,7 @@ use work.montgomery_pkg.all;
 entity first_one_finder is
     generic (
         C_block_size : integer := 16;
-        C_block_size_log2 : integer := 4
+        C_block_size_log2 : integer := 9
     );
     port (
         clk : in STD_LOGIC;
@@ -46,13 +46,10 @@ begin
     variable count : integer := C_block_size;
 
 begin
-    s_out_valid <= '0'; 
-    s_in_ready <= '1';
-
     if reset_n = '0' then
-        s_index <= (others => '1'); --set index to leftmost bit
-        s_out_valid <= '0';
-        s_in_ready <= '1';
+        s_index <= to_unsigned(C_block_size - 1, C_block_size_log2); --set index to leftmost bit
+        out_valid <= '0';
+        in_ready <= '1';
 
         first_one_index <= (others => '0');
 
@@ -64,7 +61,7 @@ begin
         
         when ST_IDLE =>
             out_valid <= '0';
-            s_index <= (others => '1');
+            s_index <= to_unsigned(C_block_size - 1, C_block_size_log2);
 
             if in_valid = '1' then 
                 state <= ST_LOOP;
@@ -105,7 +102,7 @@ begin
 
         when others =>
             state <= ST_IDLE;
-            s_in_ready <= '1';
+            in_ready <= '1';
 
         end case;
 
