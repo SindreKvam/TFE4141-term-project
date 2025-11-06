@@ -1,6 +1,6 @@
 library ieee ;
-    use ieee.std_logic_1164.all ;
-    use ieee.numeric_std.all ;
+use ieee.std_logic_1164.all ;
+use ieee.numeric_std.all ;
 
 use work.montgomery_pkg.all;
 
@@ -30,34 +30,59 @@ entity montgomery_modexp2 is
 end montgomery_modexp2;
 
 architecture rtl of montgomery_modexp2 is
-    -- make finite state machine
-    type FSM is (ST_IDLE, ST_M_TO_MONTGOMERY, ST_C_TO_MONTGOMERY, ST_LOAD, ST_CALC, ST_HOLD);
-    signal state : FSM;
 
-    --make internal signals
+    -- Make finite state machine
+    type FSM_T is (
+        ST_IDLE,
+        ST_WAIT_FOR_MONPRO,
+        ST_M_TO_MONTGOMERY,
+        ST_C_SQUARED,
+        ST_M_TIMES_C,
+        ST_C_TO_MONTGOMERY,
+        ST_RETURN,
+        ST_HOLD
+    );
+    signal state : FSM_T;
+    signal next_state : FSM_T;
+
+    type RESULT_MUX_T is (MUX_M_BAR, MUX_C_BAR, MUX_RESULT);
+    signal result_mux : RESULT_MUX_T;
+
+    -- Make internal signals
     signal a : std_logic_vector(C_block_size - 1 downto 0);
     signal b : std_logic_vector(C_block_size - 1 downto 0);
     signal M_bar : std_logic_vector(C_block_size - 1 downto 0);
     signal C_bar : std_logic_vector(C_block_size - 1 downto 0);
 
-    signal done_with_calc : unsigned(0 downto 0);
+    -- Make local signals for inputs
+    signal s_message : std_logic_vector(C_block_size - 1 downto 0);
+    signal s_key : std_logic_vector(C_block_size - 1 downto 0);
+    signal s_r_squared : std_logic_vector(C_block_size - 1 downto 0);
+    signal s_n : std_logic_vector(C_block_size - 1 downto 0);
+    signal s_n_prime : std_logic_vector(C_block_size - 1 downto 0);
 
-    signal calc_type : integer range 0 to 4;
-    -- 0 --> M_bar <= monpro(M, (r*r)%n)
-    -- 1 --> C_bar <= monpro(1, (r*r)%n)
-    -- 2 --> C_bar <= monpro(C_bar, C_bar)
-    -- 3 --> C_bar <= monpro(M_bar, C_bar)
-    -- 4 --> result <= monpro(C_bar, 1)
-
-    -- keep track of index of e
-    signal loop_counter : integer range 0 to C_block_size - 1;
-
-    --monpro logic--
+    -- Monpro signals
     signal monpro_in_valid : std_logic;
     signal monpro_in_ready : std_logic;
     signal monpro_out_valid : std_logic;
     signal monpro_out_ready : std_logic;
     signal monpro_data : std_logic_vector(C_block_size - 1 downto 0);
+
+
+    function leftmost_one_index(value : std_logic_vector) return integer is
+    begin
+
+        for i in value'range loop
+            if value(i) = '1' then
+                return i;
+            end if;
+        end loop;
+
+        return 0;
+
+    end function;
+        
+    signal key_index : integer range -1 to C_block_size - 1;
     
 begin
 
@@ -72,16 +97,16 @@ begin
             clk => clk,
             rst_n => reset_n,
             --------------------------------------------------
-            in_valid => monpro_in_valid, --left Monpro signals / right modexp signals
-            out_ready => monpro_out_ready,  --output
-            in_ready => monpro_in_ready,    --input
-            out_valid => monpro_out_valid,  --input
+            in_valid => monpro_in_valid,
+            out_ready => monpro_out_ready,
+            in_ready => monpro_in_ready,
+            out_valid => monpro_out_valid,
             --------------------------------------------------
             a => a,
             b => b,
             --------------------------------------------------
-            n => n,
-            n_prime => n_prime(GC_LIMB_WIDTH - 1 downto 0),
+            n => s_n,
+            n_prime => s_n_prime(GC_LIMB_WIDTH - 1 downto 0),
             --------------------------------------------------
             u => monpro_data
     );
@@ -114,8 +139,7 @@ begin
         	result <= (others => '0');
 
             -- Reset counters
-            loop_counter <= 0;
-            calc_type <= 0;
+            key_index <= C_block_size - 1;
 
             -- Reset state
             state <= ST_IDLE;
@@ -135,10 +159,11 @@ begin
                 when ST_IDLE =>
                 --------------------------------------------------
 
-                    calc_type <= 0;
-                    loop_counter <= 0;
+                    v_in_ready := '1';
 
-                    v_in_ready := '1'; -- ready to accept data
+                    -- Reset internal signals
+                    C_bar <= (others => '0');
+                    M_bar <= (others => '0');
 
                     -- when modexp has valid data, load values and go to next state
                     if valid_in = '1' then 
@@ -146,150 +171,157 @@ begin
                         -- Calculate M_bar
                         state <= ST_M_TO_MONTGOMERY;
                         
-                        a <= message;
-                        b <= r_stuff;
-                        v_monpro_in_valid := '1'; -- monpro can now recieve valid data
+                        -- Load input values
+                        s_message <= message;
+                        s_key <= key;
+                        s_n <= n;
+                        s_n_prime <= n_prime;
+                        s_r_squared <= r_stuff;
+
+                        key_index <= leftmost_one_index(key);
+
+                        v_in_ready := '0';
 
                     end if;
             
-            ---------------------------
-            when ST_M_TO_MONTGOMERY =>
-            ---------------------------
-                v_monpro_in_valid := '1'; -- telling monpro the data is ready untill i get a response
+                --------------------------------------------------
+                -- Calculate monpro(M, r² mod n)
+                --------------------------------------------------
+                when ST_M_TO_MONTGOMERY =>
+                --------------------------------------------------
 
-                if monpro_in_ready = '1' then
-                --hanshake is done
-                    state <= ST_CALC;
-                end if;    
-                
-          	---------------------------
-          	when ST_LOAD =>
-          	---------------------------
-                -- all controll are 0 nothing gets in and nothing gets out    
-                state <= ST_HANDSHAKE; --allways maximum in this state one cycle 
+                    a <= s_message;
+                    b <= r_stuff;
 
-                --calctype 0 is handeled by IDLE and HANDSHAKE
-                if calc_type = 1 then
-                    a <= std_logic_vector(to_unsigned(1, a'length)); -- puts value 1 into a
-                    b <= std_logic_vector(r_stuff);
-                elsif calc_type = 2 then
+                    v_monpro_in_valid := '1';
+                    result_mux <= MUX_M_BAR;
+                    
+                    if monpro_in_ready = '1' then
+                        state <= ST_WAIT_FOR_MONPRO;
+                        next_state <= ST_C_TO_MONTGOMERY;
+                    end if;
+
+                --------------------------------------------------
+                -- Calculate monpro(C, r² mod n)
+                --------------------------------------------------
+                when ST_C_TO_MONTGOMERY =>
+                --------------------------------------------------
+
+                    a <= std_logic_vector(to_unsigned(1, C_block_size));
+                    b <= r_stuff;
+
+                    v_monpro_in_valid := '1';
+                    result_mux <= MUX_C_BAR;
+
+                    if monpro_in_ready = '1' then
+                        state <= ST_WAIT_FOR_MONPRO;
+                        next_state <= ST_C_SQUARED;
+                    end if;
+
+                --------------------------------------------------
+                -- Calculate monpro(C_bar, C_bar)
+                --------------------------------------------------
+                when ST_C_SQUARED =>
+                --------------------------------------------------
+
                     a <= C_bar;
                     b <= C_bar;
-                elsif calc_type = 3 then
+
+                    v_monpro_in_valid := '1';
+                    result_mux <= MUX_C_BAR;
+
+                    if monpro_in_ready = '1' then
+                        state <= ST_WAIT_FOR_MONPRO;
+
+                        if s_key(key_index) = '1' then
+                            next_state <= ST_M_TIMES_C;
+                        else
+                            next_state <= ST_C_SQUARED;
+                        end if;
+
+                        key_index <= key_index - 1;
+
+                    end if;
+
+                --------------------------------------------------
+                -- Calculate monpro(M_bar, C_bar)
+                --------------------------------------------------
+                when ST_M_TIMES_C =>
+                --------------------------------------------------
+
                     a <= M_bar;
-                    b <= C_bar;
-                elsif calc_type = 4 then
+                    b <= C_BAR;
+
+                    v_monpro_in_valid := '1';
+                    result_mux <= MUX_C_BAR;
+
+                    if monpro_in_ready = '1' then
+                        state <= ST_WAIT_FOR_MONPRO;
+
+                        -- The keys have to be odd values so on the last iteration
+                        -- M times C will always be ran, we can check this here.
+                        if key_index = -1 then
+                            next_state <= ST_RETURN;
+                        else
+                            next_state <= ST_C_SQUARED;
+                        end if;
+
+                    end if;
+
+                --------------------------------------------------
+                -- Calculate monpro(C_bar, 1)
+                --------------------------------------------------
+                when ST_RETURN =>
+                --------------------------------------------------
+
                     a <= C_bar;
                     b <= std_logic_vector(to_unsigned(1, C_block_size));
-                else
-                    state <= ST_IDLE; -- this state cant happen
-                    v_in_ready := '1'; -- ready to accept data
-                    
-                end if;
-                -- 0 --> M_bar <= monpro(M,(r*r)%n)
-                -- 1 --> C_bar <= monpro(1,(r*r)%n)
-                -- 2 --> C_bar <= monpro(C_bar, C_bar)
-                -- 3 --> C_bar <= monpro(M_bar, C_bar)
 
-            ---------------------------    
-          	when ST_CALC =>
-            ---------------------------
-                v_monpro_out_ready := '1'; -- ready to recieve from monpro
-                if monpro_out_valid = '1' then
-                    --handshake done
+                    v_monpro_in_valid := '1';
+                    result_mux <= MUX_RESULT;
 
-                    --------
-                    --LOAD--
-                    --------
-                    if calc_type = 0 then
-                        M_bar <= monpro_data;
-
-                    elsif calc_type = 1 then
-                        C_bar <= monpro_data;
-
-                    elsif calc_type = 2 then
-                        C_bar <= monpro_data;
-
-                    elsif calc_type = 3 then
-                        C_bar <= monpro_data;
-                    
-                    elsif calc_type = 4 then
-                        result <= monpro_data;
-                        
-                    else
-                        state <= ST_IDLE; -- can not happen
-                        v_in_ready := '1'; -- ready to accept data
-                    end if;
-                    -- 0 --> M_bar <= monpro(1,(r*r)%n)
-                    -- 1 --> C_bar <= monpro(1,(r*r)%n)
-                    -- 2 --> C_bar <= monpro(C_bar, C_bar)
-                    -- 3 --> C_bar <= monpro(M_bar, C_bar)
-                    -- 4 --> result <= monpro(C_bar, 1)
-
-                    -----------------------
-                    -- check next calc type
-                    -----------------------
-                    if loop_counter < C_block_size then
-                        if calc_type < 2 then
-                            calc_type <= calc_type + 1;
-
-                        elsif calc_type = 2 and key(C_block_size - 1 - to_integer(loop_counter)) = '1' then
-                            calc_type <= calc_type + 1;
-
-                        elsif calc_type = 3 then
-                            if loop_counter < C_block_size - 1 then
-                                calc_type <= calc_type - 1;-- go back in the loop, but not if last bit
-
-                            elsif loop_counter = C_block_size - 1 then
-                                calc_type <= TO_UNSIGNED(4, 3); --if it was last bit, go to calctype 4
-                                    
-                            end if;
-                            loop_counter <= loop_counter + 1;
-                    
-                        else
-                            calc_type <= calc_type; -- no change in calc type
-                            loop_counter <= loop_counter + 1; 
-                        
-                        end if;
+                    if monpro_in_ready = '1' then
+                        state <= ST_WAIT_FOR_MONPRO;
+                        next_state <= ST_HOLD;
                     end if;
 
-                    -------------------
-                    --Figure next state
-                    -------------------
-                    -- is the calculation done ?
-                    
-                    if calc_type = 4 then -- meaning we are done with calc
-                        state <= ST_HOLD;
-                        v_out_valid := '1'; -- on next clk this module has valid output
+                --------------------------------------------------
+                when ST_WAIT_FOR_MONPRO =>
+                --------------------------------------------------
 
-                    elsif loop_counter = C_block_size then
-                        calc_type <= to_unsigned(4, 3); --calctype = 4
-                        --we are done with calc on next cycle
-                        state <= ST_LOAD;
-                
-                    elsif loop_counter < C_block_size then
-                        state <= ST_LOAD;
+                    v_monpro_out_ready := '1';
 
-                    else
+                    if monpro_out_valid = '1' then
+
+                        -- Load output value
+                        case result_mux is
+                            when MUX_C_BAR => C_bar <= monpro_data;
+                            when MUX_M_BAR => M_bar <= monpro_data;
+                            when MUX_RESULT => 
+
+                                result <= monpro_data;
+                                v_out_valid := '1';
+
+                            when others =>
+                        end case;
+
+                        state <= next_state;
+
+                    end if;
+
+                --------------------------------------------------
+                when ST_HOLD =>
+                --------------------------------------------------
+
+                    v_out_valid := '1';
+
+                    if ready_out = '1' then
                         state <= ST_IDLE;
-                        v_in_ready := '1'; -- ready to accept data
+                        v_out_valid := '0';
                     end if;
-                end if;
-
-                
-
-
-            when ST_HOLD =>
-                v_out_valid := '1'; -- my output is available untill something on the outside
-                                    -- is ready to input more
-
-                if ready_out = '1' then
-                    state <= ST_IDLE; --is this change to fast?
-                    v_in_ready := '1'; -- ready to accept data
-                end if;
-                
-            ---------------------------
+                    
         	end case;
+
             valid_out <= v_out_valid;
             ready_in <= v_in_ready;
 
