@@ -17,7 +17,8 @@
 --
 --   Registers   [7..0]: Used for the 256 bit key_n
 --   Registers  [15..8]: Used for the 256 bit key_e/key_d
---   Registers [31..16]: Unused
+--   Registers [23..16]: Used for the 256 bit key_n_prime
+--   Registers [31..24]: Used for the 256 bit key_r_squared_mod_n
 --   Register      [32]: Status register
 --   Registers [63..33]: unimplemented, easy to add
 --------------------------------------------------------------------------------
@@ -43,8 +44,8 @@ entity rsa_regio is
 		-- Users to add ports here
 		key_e_d         : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		key_n           : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-       key_n_prime     : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-       key_r_squared_mod_n : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+        key_n_prime     : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+        key_r_squared_mod_n : out std_logic_vector(C_BLOCK_SIZE-1 downto 0);
 		rsa_status      : in  std_logic_vector(31 downto 0);
 
 		-- User ports ends
