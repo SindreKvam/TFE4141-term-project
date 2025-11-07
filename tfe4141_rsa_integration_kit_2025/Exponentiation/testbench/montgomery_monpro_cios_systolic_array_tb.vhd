@@ -3,15 +3,21 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use std.env.all;
 
+library vunit_lib;
+context vunit_lib.vunit_context;
+
 use work.montgomery_pkg.all;
 use work.instruction_pkg.all;
 
 
 entity montgomery_monpro_cios_systolic_array_tb is
+    generic (runner_cfg : string);
 end entity montgomery_monpro_cios_systolic_array_tb;
 
 architecture tb of montgomery_monpro_cios_systolic_array_tb is
     
+    constant tb_logger : logger_t := get_logger(tb'path_name);
+
     constant C_CLOCK_FREQUENCY : integer := 100e6;
     constant C_CLOCK_PERIOD : time := 1 sec / C_CLOCK_FREQUENCY;
     
@@ -51,6 +57,7 @@ begin
 
     p_stimuli: process
     begin
+        test_runner_setup(runner, runner_cfg);
 
         wait for C_CLOCK_PERIOD / 2;
         rst_n <= '1' after 3 * C_CLOCK_PERIOD;
@@ -70,7 +77,9 @@ begin
 
         out_ready <= '0' after 2 * C_CLOCK_PERIOD;
 
-        wait for 33 * C_CLOCK_PERIOD;
+        wait until rising_edge(out_valid);
+
+        info(tb_logger, "Value of output: " & to_hex_string(u));
 
         out_ready <= '1' after 2 * C_CLOCK_PERIOD;
         
@@ -83,6 +92,7 @@ begin
         wait for 10 * C_CLOCK_PERIOD;
 
         report "Testbench finished";
+        test_runner_cleanup(runner);
         finish;
 
 
