@@ -7,3 +7,7 @@ RSA_soc/RSA_soc/
 
 .Xil
 */.Xil
+
+sim_build/
+work/
+results.xml

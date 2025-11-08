@@ -28,29 +28,32 @@ begin
     
     p_gamma_final: process(clk, rst_n)
 
-        variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
+        variable v_tmp_result : T_CARRY_SUM_ARRAY;
 
     begin
 
-        v_tmp_result := (others => '0');
+        v_tmp_result := (others => (others => '0'));
 
-        --------------------------------------------
-        if rst_n = '0' then
-        --------------------------------------------
+        if rising_edge(clk) then
 
-            gamma_sum_1 <= (others => '0');
-            gamma_sum_2 <= (others => '0');
+            --------------------------------------------
+            if rst_n = '0' then
+            --------------------------------------------
 
-        --------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------
+                gamma_sum_1 <= (others => '0');
+                gamma_sum_2 <= (others => '0');
 
-            v_tmp_result := resize(unsigned(sum_1_in) + unsigned(carry_in), v_tmp_result'length);
-            
-            gamma_sum_1 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
-            gamma_sum_2 <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) + unsigned(sum_2_in));
+            --------------------------------------------
+            else
+            --------------------------------------------
 
-        --------------------------------------------
+                v_tmp_result := carry_sum(sum_1_in, (others => '0'), (others => '0'), carry_in);
+                
+                gamma_sum_1 <= v_tmp_result(1);
+                gamma_sum_2 <= std_logic_vector(unsigned(v_tmp_result(0)) + unsigned(sum_2_in));
+
+            --------------------------------------------
+            end if;
         end if;
     end process p_gamma_final;
     
