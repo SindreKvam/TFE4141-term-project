@@ -103,6 +103,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     signal in_gamma_final_sum_2 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
     signal out_gamma_final_sum_1 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
     signal out_gamma_final_sum_2 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
+    signal previous_out_gamma_final_sum_2 : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
 
 
     --------------------------------------------------
@@ -147,7 +148,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
 
     type T_BETA_M is array(0 to GC_NUM_LIMBS - 1) of std_logic_vector(GC_LIMB_WIDTH - 1 downto 0);
     signal beta_m : T_BETA_M := (others => (others => '0'));
-    signal active_beta_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal active_beta_counter : integer range 0 to GC_NUM_LIMBS := 0;
 
     signal gamma_1_beta_m_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
     signal gamma_2_beta_m_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
@@ -160,7 +161,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     signal t : T_INTERMEDIATE_ARRAY := (others => (others => '0'));
     signal s_u : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
     signal capture : std_logic := '0';
-    signal capture_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
+    signal capture_counter : integer range 0 to GC_NUM_LIMBS := 0;
 
 begin
 
@@ -213,6 +214,8 @@ begin
             v_out_valid := '0';
             v_in_ready := '0';
             v_capture := '0';
+
+            previous_out_gamma_final_sum_2 <= out_gamma_final_sum_2;
 
             --------------------------------------------------
             -- Finite State Machine
@@ -296,9 +299,11 @@ begin
                     --------------------------------------------------
                     if instruction_counter mod 3 = 0 and instruction_counter /= 0 and active_beta_counter <= GC_NUM_LIMBS - 1 then
 
-                        beta_m(active_beta_counter) <= out_beta_m;
+                        if active_beta_counter < GC_NUM_LIMBS then
+                            beta_m(active_beta_counter) <= out_beta_m;
+                        end if;
 
-                        if active_beta_counter < GC_NUM_LIMBS and active_beta_counter < GC_NUM_LIMBS - 1 then
+                        if active_beta_counter < GC_NUM_LIMBS and active_beta_counter < GC_NUM_LIMBS then
                             active_beta_counter <= active_beta_counter + 1;
                         end if;
 
@@ -412,7 +417,7 @@ begin
                         when others =>
                     end case;
 
-                    if capture = '1' and capture_counter < GC_NUM_LIMBS - 1 then
+                    if capture = '1' then
                         capture_counter <= capture_counter + 1;
                     end if;
 
@@ -530,7 +535,7 @@ begin
 
         case instruction(mux_alpha_final_sum_input'range) is
             when "0" => in_alpha_final_sum <= (others => '0');
-            when "1" => in_alpha_final_sum <= out_gamma_final_sum_2;
+            when "1" => in_alpha_final_sum <= previous_out_gamma_final_sum_2;
             when others =>
         end case;
 
