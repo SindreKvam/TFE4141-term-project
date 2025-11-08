@@ -10,22 +10,22 @@ use std.env.finish;
 
 entity montgomery_modexp_tb is
     generic(
-        C_block_size : integer := 16;
+        C_block_size : integer := 256;
 
         -- key values
-        e : std_logic_vector := std_logic_vector(to_unsigned(5, C_block_size));
-        d : std_logic_vector := std_logic_vector(to_unsigned(269, C_block_size));
+        e : std_logic_vector := x"0000000000000000000000000000000000000000000000000000000000010001";
+        d : std_logic_vector := x"0CEA1651EF44BE1F1F1476B7539BED10D73E3AAC782BD9999A1E5A790932BFE9";
 
         -- modulus values
-        n : std_logic_vector := std_logic_vector(to_unsigned(377, C_block_size));
-        n_prime: std_logic_vector := std_logic_vector(to_unsigned(91959, C_block_size));
-        r_stuff: std_logic_vector := std_logic_vector(to_unsigned(74, C_block_size))
+        n : std_logic_vector := x"99925173AD65686715385EA800CD28120288FC70A9BC98DD4C90D676F8FF768D";
+        n_prime: std_logic_vector := x"cec4f7862f7488bc9635da7471b8a8de5da7fb55c04749ffa617a7468833c3bb";
+        r_stuff: std_logic_vector := x"56ddf8b43061ad3dbcd1757244d1a19e2e8c849dde4817e55bb29d1c20c06364"
     );
 end montgomery_modexp_tb;
 
 architecture sim of montgomery_modexp_tb is
 
-    constant clk_hz : integer := 10e6;
+    constant clk_hz : integer := 100e6;
     constant clk_period : time := 1 sec / clk_hz;
 
     --input control
@@ -208,7 +208,7 @@ begin
         wait until rising_edge(clk);
         write_all: for i in 3 downto 0 loop
             --ready_for_push is initialized as 1
-            message <= testMessages(i);
+            message <= x"0000000011111111222222223333333344444444555555556666666677777777";--testMessages(i);
             valid_in <= '1';
 
             if (ready_in = '0') then
@@ -253,7 +253,7 @@ begin
 
     end process data_handler;
 
-    DUT : entity work.montgomery_modexp(rtl)
+    DUT : entity work.montgomery_modexp2(rtl)
 
     generic map(
         C_block_size => C_block_size

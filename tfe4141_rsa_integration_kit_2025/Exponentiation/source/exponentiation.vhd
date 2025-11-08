@@ -36,7 +36,7 @@ end exponentiation;
 architecture expBehave of exponentiation is
 begin
 
-    modexp: entity work.montgomery_modexp
+    modexp: entity work.montgomery_modexp2
         generic map(
             C_block_size => C_BLOCK_SIZE,
             GC_LIMB_WIDTH => 32

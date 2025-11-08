@@ -5,206 +5,191 @@
    <db_ref_list>
       <db_ref path="montgomery_modexp_tb_behav.wdb" id="1">
          <top_modules>
+            <top_module name="instruction_pkg" />
             <top_module name="montgomery_modexp_tb" />
             <top_module name="montgomery_pkg" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
-      <ZoomEndTime time="15.086611 us"></ZoomEndTime>
-      <Cursor1Time time="8.719496 us"></Cursor1Time>
+      <ZoomStartTime time="6,781.667 ns"></ZoomStartTime>
+      <ZoomEndTime time="8,991.668 ns"></ZoomEndTime>
+      <Cursor1Time time="7,645.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="210"></NameColumnWidth>
-      <ValueColumnWidth column_width="80"></ValueColumnWidth>
+      <NameColumnWidth column_width="193"></NameColumnWidth>
+      <ValueColumnWidth column_width="317"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="38" />
-   <wvobject type="divider" fp_name="divider35">
+   <WVObjectSize size="34" />
+   <wvobject fp_name="divider35" type="divider">
       <obj_property name="label">Constants</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/key" type="array">
-      <obj_property name="ElementShortName">key[15:0]</obj_property>
-      <obj_property name="ObjectShortName">key[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/key">
+      <obj_property name="ElementShortName">key[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key[255:0]</obj_property>
       <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/testMessages" type="array">
-      <obj_property name="ElementShortName">testMessages[3:0][15:0]</obj_property>
-      <obj_property name="ObjectShortName">testMessages[3:0][15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/testMessages">
+      <obj_property name="ElementShortName">testMessages[3:0][255:0]</obj_property>
+      <obj_property name="ObjectShortName">testMessages[3:0][255:0]</obj_property>
       <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/key" type="array">
-      <obj_property name="ElementShortName">key[15:0]</obj_property>
-      <obj_property name="ObjectShortName">key[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/key">
+      <obj_property name="ElementShortName">key[255:0]</obj_property>
+      <obj_property name="ObjectShortName">key[255:0]</obj_property>
       <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
-   <wvobject type="divider" fp_name="divider36">
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/message">
+      <obj_property name="ElementShortName">message[255:0]</obj_property>
+      <obj_property name="ObjectShortName">message[255:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider36" type="divider">
       <obj_property name="label">Modexp/tb I/O</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/valid_in" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/valid_in">
       <obj_property name="ElementShortName">valid_in</obj_property>
       <obj_property name="ObjectShortName">valid_in</obj_property>
       <obj_property name="CustomSignalColor">#FF00FF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/ready_out" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/ready_out">
       <obj_property name="ElementShortName">ready_out</obj_property>
       <obj_property name="ObjectShortName">ready_out</obj_property>
       <obj_property name="CustomSignalColor">#FF00FF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/ready_in" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/ready_in">
       <obj_property name="ElementShortName">ready_in</obj_property>
       <obj_property name="ObjectShortName">ready_in</obj_property>
       <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/valid_out" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/valid_out">
       <obj_property name="ElementShortName">valid_out</obj_property>
       <obj_property name="ObjectShortName">valid_out</obj_property>
       <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/reset_n" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/reset_n">
       <obj_property name="ElementShortName">reset_n</obj_property>
       <obj_property name="ObjectShortName">reset_n</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/message" type="array">
-      <obj_property name="ElementShortName">message[15:0]</obj_property>
-      <obj_property name="ObjectShortName">message[15:0]</obj_property>
+   <wvobject type="other" fp_name="/montgomery_modexp_tb/DUT/key_index">
+      <obj_property name="ElementShortName">key_index</obj_property>
+      <obj_property name="ObjectShortName">key_index</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/s_key">
+      <obj_property name="ElementShortName">s_key[255:0]</obj_property>
+      <obj_property name="ObjectShortName">s_key[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/s_message">
+      <obj_property name="ElementShortName">s_message[255:0]</obj_property>
+      <obj_property name="ObjectShortName">s_message[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/result">
+      <obj_property name="ElementShortName">result[255:0]</obj_property>
+      <obj_property name="ObjectShortName">result[255:0]</obj_property>
       <obj_property name="CustomSignalColor">#FFFF00</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/result" type="array">
-      <obj_property name="ElementShortName">result[15:0]</obj_property>
-      <obj_property name="ObjectShortName">result[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="divider" fp_name="divider37">
+   <wvobject fp_name="divider37" type="divider">
       <obj_property name="label">Modexp internals</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/a" type="array">
-      <obj_property name="ElementShortName">a[15:0]</obj_property>
-      <obj_property name="ObjectShortName">a[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/a">
+      <obj_property name="ElementShortName">a[255:0]</obj_property>
+      <obj_property name="ObjectShortName">a[255:0]</obj_property>
       <obj_property name="CustomSignalColor">#0000A0</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro_data" type="array">
-      <obj_property name="ElementShortName">monpro_data[15:0]</obj_property>
-      <obj_property name="ObjectShortName">monpro_data[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/b">
+      <obj_property name="ElementShortName">b[255:0]</obj_property>
+      <obj_property name="ObjectShortName">b[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/monpro_data">
+      <obj_property name="ElementShortName">monpro_data[255:0]</obj_property>
+      <obj_property name="ObjectShortName">monpro_data[255:0]</obj_property>
       <obj_property name="CustomSignalColor">#0000A0</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/state" type="other">
+   <wvobject type="other" fp_name="/montgomery_modexp_tb/DUT/state">
       <obj_property name="ElementShortName">state</obj_property>
       <obj_property name="ObjectShortName">state</obj_property>
       <obj_property name="CustomSignalColor">#FFA500</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/calc_type" type="array">
-      <obj_property name="ElementShortName">calc_type[2:0]</obj_property>
-      <obj_property name="ObjectShortName">calc_type[2:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/C_bar">
+      <obj_property name="ElementShortName">C_bar[255:0]</obj_property>
+      <obj_property name="ObjectShortName">C_bar[255:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/C_bar" type="array">
-      <obj_property name="ElementShortName">C_bar[15:0]</obj_property>
-      <obj_property name="ObjectShortName">C_bar[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/M_bar">
+      <obj_property name="ElementShortName">M_bar[255:0]</obj_property>
+      <obj_property name="ObjectShortName">M_bar[255:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/M_bar" type="array">
-      <obj_property name="ElementShortName">M_bar[15:0]</obj_property>
-      <obj_property name="ObjectShortName">M_bar[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/loop_counter" type="array">
-      <obj_property name="ElementShortName">loop_counter[8:0]</obj_property>
-      <obj_property name="ObjectShortName">loop_counter[8:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject type="divider" fp_name="divider237">
+   <wvobject fp_name="divider237" type="divider">
       <obj_property name="label">First one finder</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/in_ready" type="logic">
-      <obj_property name="ElementShortName">in_ready</obj_property>
-      <obj_property name="ObjectShortName">in_ready</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/in_valid" type="logic">
-      <obj_property name="ElementShortName">in_valid</obj_property>
-      <obj_property name="ObjectShortName">in_valid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/data" type="array">
-      <obj_property name="ElementShortName">data[15:0]</obj_property>
-      <obj_property name="ObjectShortName">data[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/out_ready" type="logic">
-      <obj_property name="ElementShortName">out_ready</obj_property>
-      <obj_property name="ObjectShortName">out_ready</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/out_valid" type="logic">
-      <obj_property name="ElementShortName">out_valid</obj_property>
-      <obj_property name="ObjectShortName">out_valid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/state" type="other">
-      <obj_property name="ElementShortName">state</obj_property>
-      <obj_property name="ObjectShortName">state</obj_property>
-   </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/first_one_finder_proc/first_one_index" type="array">
-      <obj_property name="ElementShortName">first_one_index[8:0]</obj_property>
-      <obj_property name="ObjectShortName">first_one_index[8:0]</obj_property>
-   </wvobject>
-   <wvobject type="divider" fp_name="divider38">
+   <wvobject fp_name="divider38" type="divider">
       <obj_property name="label">Monpro internals</obj_property>
       <obj_property name="DisplayName">label</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/in_valid" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/DUT/monpro/in_valid">
       <obj_property name="ElementShortName">in_valid</obj_property>
       <obj_property name="ObjectShortName">in_valid</obj_property>
       <obj_property name="CustomSignalColor">#FF00FF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/in_ready" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/DUT/monpro/in_ready">
       <obj_property name="ElementShortName">in_ready</obj_property>
       <obj_property name="ObjectShortName">in_ready</obj_property>
       <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/out_ready" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/DUT/monpro/out_ready">
       <obj_property name="ElementShortName">out_ready</obj_property>
       <obj_property name="ObjectShortName">out_ready</obj_property>
       <obj_property name="CustomSignalColor">#FF00FF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/out_valid" type="logic">
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/DUT/monpro/out_valid">
       <obj_property name="ElementShortName">out_valid</obj_property>
       <obj_property name="ObjectShortName">out_valid</obj_property>
       <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/state" type="other">
+   <wvobject type="other" fp_name="/montgomery_modexp_tb/DUT/monpro/state">
       <obj_property name="ElementShortName">state</obj_property>
       <obj_property name="ObjectShortName">state</obj_property>
       <obj_property name="CustomSignalColor">#FFA500</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/s_a" type="array">
-      <obj_property name="ElementShortName">s_a[15:0]</obj_property>
-      <obj_property name="ObjectShortName">s_a[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/monpro/s_a">
+      <obj_property name="ElementShortName">s_a[0:7][31:0]</obj_property>
+      <obj_property name="ObjectShortName">s_a[0:7][31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/s_b" type="array">
-      <obj_property name="ElementShortName">s_b[15:0]</obj_property>
-      <obj_property name="ObjectShortName">s_b[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/monpro/s_b">
+      <obj_property name="ElementShortName">s_b[0:7][31:0]</obj_property>
+      <obj_property name="ObjectShortName">s_b[0:7][31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/DUT/monpro/u" type="array">
-      <obj_property name="ElementShortName">u[15:0]</obj_property>
-      <obj_property name="ObjectShortName">u[15:0]</obj_property>
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/monpro/t">
+      <obj_property name="ElementShortName">t[0:7][31:0]</obj_property>
+      <obj_property name="ObjectShortName">t[0:7][31:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
-   <wvobject fp_name="/montgomery_modexp_tb/clk" type="logic">
+   <wvobject type="array" fp_name="/montgomery_modexp_tb/DUT/monpro/u">
+      <obj_property name="ElementShortName">u[255:0]</obj_property>
+      <obj_property name="ObjectShortName">u[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/montgomery_modexp_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>

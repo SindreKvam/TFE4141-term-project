@@ -48,6 +48,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     signal s_a : T_LIMBS_ARRAY := (others => (others => '0'));
     signal s_b : T_LIMBS_ARRAY := (others => (others => '0'));
     signal s_n : T_LIMBS_ARRAY := (others => (others => '0'));
+    signal s_n_whole : std_logic_vector(GC_DATA_WIDTH - 1 downto 0) := (others => '0');
     signal s_n_prime : std_logic_vector(GC_LIMB_WIDTH - 1 downto 0) := (others => '0'); -- for CIOS we only need the first part of n_prime
 
 
@@ -107,7 +108,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     --------------------------------------------------
     -- Finite State Machine
     --------------------------------------------------
-    type T_FSM is (ST_IDLE, ST_CALC, ST_HOLD); -- Calc is short for Calculate btw.
+    type T_FSM is (ST_IDLE, ST_CALC, ST_CHECK_RESULT, ST_HOLD); -- Calc is short for Calculate btw.
     signal state : T_FSM := ST_IDLE;
 
 
@@ -157,6 +158,7 @@ architecture rtl of montgomery_monpro_cios_systolic_array is
     -- Intermediate results
     --------------------------------------------------
     signal t : T_INTERMEDIATE_ARRAY := (others => (others => '0'));
+    signal s_u : std_logic_vector(GC_DATA_WIDTH - 1 downto 0);
     signal capture : std_logic := '0';
     signal capture_counter : integer range 0 to GC_NUM_LIMBS - 1 := 0;
 
@@ -184,6 +186,7 @@ begin
             s_a <= (others => (others => '0'));
             s_b <= (others => (others => '0'));
             s_n <= (others => (others => '0'));
+            s_n_whole <= (others => '0');
             s_n_prime <= (others => '0');
 
             -- Reset state machine
@@ -232,6 +235,7 @@ begin
                             s_n(i) <= n((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
                         end loop;
 
+                        s_n_whole <= n;
                         s_n_prime <= n_prime;
 
                         -- Reset counters to be used
@@ -247,6 +251,7 @@ begin
 
                         instruction <= instruction_set(0);
 
+                        v_in_ready := '0';
                         state <= ST_CALC;
 
                     end if;
@@ -261,9 +266,8 @@ begin
                     instruction <= instruction_set(instruction_counter);
 
                     if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 1 then
-                        state <= ST_HOLD;
+                        state <= ST_CHECK_RESULT;
                         instruction_counter <= 0;
-                        v_out_valid := '1';
                     else
                         instruction_counter <= instruction_counter + 1;
                     end if;
@@ -328,6 +332,20 @@ begin
 
 
                 --------------------------------------------------
+                when ST_CHECK_RESULT =>
+                --------------------------------------------------
+
+                    if unsigned(t(GC_NUM_LIMBS - 1)) > unsigned(s_n(GC_NUM_LIMBS - 1)) then
+                        u <= std_logic_vector(unsigned(s_u) - unsigned(s_n_whole));
+                    else
+                        u <= s_u;
+                    end if;
+
+                    v_out_valid := '1';
+                    state <= ST_HOLD;
+
+
+                --------------------------------------------------
                 when ST_HOLD =>
                 --------------------------------------------------
 
@@ -335,6 +353,7 @@ begin
 
                     if out_ready = '1' then
                         state <= ST_IDLE;
+                        v_in_ready := '1';
                         v_out_valid := '0';
                     end if;
 
@@ -352,14 +371,14 @@ begin
 
     end process monpro_proc;
 
-    u(GC_LIMB_WIDTH - 1 downto 0) <= t(0);
-    u(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) <= t(1);
-    u(GC_LIMB_WIDTH * 3 - 1 downto GC_LIMB_WIDTH * 2) <= t(2);
-    u(GC_LIMB_WIDTH * 4 - 1 downto GC_LIMB_WIDTH * 3) <= t(3);
-    u(GC_LIMB_WIDTH * 5 - 1 downto GC_LIMB_WIDTH * 4) <= t(4);
-    u(GC_LIMB_WIDTH * 6 - 1 downto GC_LIMB_WIDTH * 5) <= t(5);
-    u(GC_LIMB_WIDTH * 7 - 1 downto GC_LIMB_WIDTH * 6) <= t(6);
-    u(GC_LIMB_WIDTH * 8 - 1 downto GC_LIMB_WIDTH * 7) <= t(7);
+    s_u(GC_LIMB_WIDTH - 1 downto 0) <= t(0);
+    s_u(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH) <= t(1);
+    s_u(GC_LIMB_WIDTH * 3 - 1 downto GC_LIMB_WIDTH * 2) <= t(2);
+    s_u(GC_LIMB_WIDTH * 4 - 1 downto GC_LIMB_WIDTH * 3) <= t(3);
+    s_u(GC_LIMB_WIDTH * 5 - 1 downto GC_LIMB_WIDTH * 4) <= t(4);
+    s_u(GC_LIMB_WIDTH * 6 - 1 downto GC_LIMB_WIDTH * 5) <= t(5);
+    s_u(GC_LIMB_WIDTH * 7 - 1 downto GC_LIMB_WIDTH * 6) <= t(6);
+    s_u(GC_LIMB_WIDTH * 8 - 1 downto GC_LIMB_WIDTH * 7) <= t(7);
 
 
     --------------------------------------------------
