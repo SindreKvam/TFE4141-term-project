@@ -298,7 +298,7 @@ begin
 
                         beta_m(active_beta_counter) <= out_beta_m;
 
-                        if active_beta_counter < GC_NUM_LIMBS then
+                        if active_beta_counter < GC_NUM_LIMBS and active_beta_counter < GC_NUM_LIMBS - 1 then
                             active_beta_counter <= active_beta_counter + 1;
                         end if;
 
@@ -412,7 +412,7 @@ begin
                         when others =>
                     end case;
 
-                    if capture = '1' then
+                    if capture = '1' and capture_counter < GC_NUM_LIMBS - 1 then
                         capture_counter <= capture_counter + 1;
                     end if;
 

@@ -1,7 +1,8 @@
-SIM            ?= ghdl
+SIM            ?= nvc
 TOPLEVEL_LANG  ?= vhdl
 ARCH           := rtl
-GHDL_ARGS      += --std=08
+
+SIM_ARGS += --wave=waves.ghw
 
 PROJ_DIR := $(PWD)
 SRC_DIR  := $(PROJ_DIR)/source
