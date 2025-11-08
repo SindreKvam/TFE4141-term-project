@@ -21,6 +21,17 @@ LAB_INPUT_A = 0x0000000011111111222222223333333344444444555555556666666677777777
 LAB_INPUT_B = 0x56DDF8B43061AD3DBCD1757244D1A19E2E8C849DDE4817E55BB29D1C20C06364
 LAB_EXPECTED_RESULT = 0x8ABE76B2CF6E603497A8BA867EDDC580B943F5690777E388FAE627E05449851A
 
+EXPECTED_BETA_M = [
+    0x150EA394,
+    0x5257A149,
+    0x3F146A58,
+    0x907D544E,
+    0x195752EE,
+    0xBF39F894,
+    0x1162587E,
+    0xE748676F,
+]
+
 
 @cocotb.test()
 async def test_loading_input(dut):
@@ -60,9 +71,53 @@ async def test_loading_input(dut):
     dut._log.info(f"s_b_expected: {s_b_expected}")
 
 
+# @cocotb.parametrize(
+#     (
+#         "a",
+#         [
+#             LAB_INPUT_A,
+#             0x8ABE76B2CF6E603497A8BA867EDDC580B943F5690777E388FAE627E05449851A,
+#         ],
+#     )
+# )
+# @cocotb.parametrize(
+#     (
+#         "b",
+#         [
+#             LAB_INPUT_B,
+#             0x61DD65C6CF9D5CDAC7A55013F065678E4580B069817FA98DBB772EDA623B92FC,
+#         ],
+#     )
+# )
+# @cocotb.parametrize(
+#     (
+#         "result",
+#         [
+#             LAB_EXPECTED_RESULT,
+#             0x6261B7082F228B5C46106884D6ED9D3177D09D2DE0CA87FAE1E80AA5A0966312,
+#         ],
+#     )
+# )
 @cocotb.test()
-async def test_lab_results(dut):
+@cocotb.parametrize(
+    test_data=[
+        (LAB_INPUT_A, LAB_INPUT_B, LAB_EXPECTED_RESULT),
+        (
+            0x8ABE76B2CF6E603497A8BA867EDDC580B943F5690777E388FAE627E05449851A,
+            0x61DD65C6CF9D5CDAC7A55013F065678E4580B069817FA98DBB772EDA623B92FC,
+            0x6261B7082F228B5C46106884D6ED9D3177D09D2DE0CA87FAE1E80AA5A0966312,
+        ),
+        (
+            0x6261B7082F228B5C46106884D6ED9D3177D09D2DE0CA87FAE1E80AA5A0966312,
+            0x1,
+            0x23026C469918F5EA097F843DC5D5259192F9D3510415841CE834324F4C237AC7,
+        ),
+    ],
+)
+async def test_lab_results(dut, test_data):
     cocotb.start_soon(Clock(dut.clk, CLK_PERIOD_NS, unit="ns").start())
+
+    a, b, result = test_data
 
     dut.rst_n.value = 0
     dut.in_valid.value = 0
@@ -75,8 +130,11 @@ async def test_lab_results(dut):
     # Load input values
     dut.n.value = LAB_KEY_N
     dut.n_prime.value = LAB_KEY_N_PRIME
-    dut.a.value = LAB_INPUT_A
-    dut.b.value = LAB_INPUT_B
+    dut.a.value = a
+    dut.b.value = b
+
+    assert a < LAB_KEY_N
+    assert b < LAB_KEY_N
 
     while int(dut.in_ready.value) == 0:
         await RisingEdge(dut.clk)
@@ -92,5 +150,5 @@ async def test_lab_results(dut):
         await RisingEdge(dut.clk)
 
     dut._log.info("Output value: \t\t 0x%X", dut.u.value)
-    dut._log.info("Expected output value: \t 0x%X", LAB_EXPECTED_RESULT)
-    assert dut.u.value == LAB_EXPECTED_RESULT
+    dut._log.info("Expected output value: \t 0x%X", result)
+    assert dut.u.value == result
