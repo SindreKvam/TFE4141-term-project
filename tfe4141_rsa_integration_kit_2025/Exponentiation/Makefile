@@ -11,11 +11,11 @@ TB_DIR   := $(PROJ_DIR)/python_testbench
 VHDL_SOURCES += \
   $(SRC_DIR)/montgomery_pkg.vhd \
   $(SRC_DIR)/instruction_pkg.vhd \
-  $(SRC_DIR)/processing_elements/alpha.vhd \
-  $(SRC_DIR)/processing_elements/alpha_final.vhd \
-  $(SRC_DIR)/processing_elements/gamma.vhd \
-  $(SRC_DIR)/processing_elements/gamma_final.vhd \
-  $(SRC_DIR)/processing_elements/beta.vhd \
+  $(SRC_DIR)/alpha.vhd \
+  $(SRC_DIR)/alpha_final.vhd \
+  $(SRC_DIR)/gamma.vhd \
+  $(SRC_DIR)/gamma_final.vhd \
+  $(SRC_DIR)/beta.vhd \
   $(SRC_DIR)/montgomery_monpro_cios_systolic_array.vhd
 
 COCOTB_TOPLEVEL      := montgomery_monpro_cios_systolic_array
