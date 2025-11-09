@@ -18,6 +18,9 @@ entity exponentiation is
 		ready_out	: in std_logic;
 		valid_out	: out std_logic;
 
+        msgin_last  : in std_logic;
+        msgout_last : out std_logic;
+
 		--output data
 		result 		: out std_logic_vector(C_BLOCK_SIZE - 1 downto 0);
 
@@ -52,6 +55,9 @@ begin
             --ouput controll
             ready_out => ready_out,
             valid_out => valid_out,
+
+            msgin_last => msgin_last,
+            msgout_last => msgout_last,
 
             --output data
             result => result,

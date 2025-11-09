@@ -86,9 +86,9 @@ begin
             n_prime   => key_n_prime ,
             r_squared => key_r_squared_mod_n,
 			clk       => clk         ,
-			reset_n   => reset_n
+			reset_n   => reset_n     ,
+            msgout_last => msgout_last,
+            msgin_last  => msgin_last
 		);
-
-	msgout_last  <= msgin_last;
 	rsa_status   <= (others => '0');
 end rtl;

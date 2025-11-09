@@ -61,9 +61,11 @@ architecture struct of rsa_accelerator_tb is
 	-----------------------------------------------------------------------------
 	-- Interface to the register block
 	-----------------------------------------------------------------------------
-	signal key_e_d         : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal key_n           : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
-	signal rsa_status      : std_logic_vector(31 downto 0);
+	signal key_e_d             : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal key_n               : std_logic_vector(C_BLOCK_SIZE-1 downto 0);
+	signal key_n_prime         : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := x"cec4f7862f7488bc9635da7471b8a8de5da7fb55c04749ffa617a7468833c3bb";
+	signal key_r_squared_mod_n : std_logic_vector(C_BLOCK_SIZE-1 downto 0) := x"56ddf8b43061ad3dbcd1757244d1a19e2e8c849dde4817e55bb29d1c20c06364";
+	signal rsa_status          : std_logic_vector(31 downto 0);
 
 	-----------------------------------------------------------------------------
 	-- Testcases
@@ -601,6 +603,8 @@ u_rsa_core : entity work.rsa_core
 		-----------------------------------------------------------------------------
 		key_e_d                => key_e_d,
 		key_n                  => key_n,
+        key_n_prime            => key_n_prime,
+        key_r_squared_mod_n    => key_r_squared_mod_n,
 		rsa_status             => rsa_status
 
 	);

@@ -14,14 +14,17 @@ entity montgomery_modexp2 is
 		reset_n 	: in STD_LOGIC;
     --------------------------------------------------
 		valid_in	: in STD_LOGIC;
-		ready_in	: out STD_LOGIC;
+		ready_in	: out STD_LOGIC := '0';
 		ready_out	: in STD_LOGIC;
-		valid_out	: out STD_LOGIC;
+		valid_out	: out STD_LOGIC := '0';
+    --------------------------------------------------
+        msgin_last  : in STD_LOGIC;
+        msgout_last : out STD_LOGIC;
     --------------------------------------------------
 		message 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0 );
 		key 		: in STD_LOGIC_VECTOR( C_block_size-1 downto 0 ); -- e or d (encrypt or decrypt)
     --------------------------------------------------
-		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0);
+		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0) := (others => '0');
     --------------------------------------------------
 		r_stuff 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0); --r^2 % n precalculated 
         n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
@@ -42,17 +45,17 @@ architecture rtl of montgomery_modexp2 is
         ST_RETURN,
         ST_HOLD
     );
-    signal state : FSM_T;
-    signal next_state : FSM_T;
+    signal state : FSM_T := ST_IDLE;
+    signal next_state : FSM_T := ST_IDLE;
 
     type RESULT_MUX_T is (MUX_M_BAR, MUX_C_BAR, MUX_RESULT);
     signal result_mux : RESULT_MUX_T;
 
     -- Make internal signals
-    signal a : std_logic_vector(C_block_size - 1 downto 0);
-    signal b : std_logic_vector(C_block_size - 1 downto 0);
-    signal M_bar : std_logic_vector(C_block_size - 1 downto 0);
-    signal C_bar : std_logic_vector(C_block_size - 1 downto 0);
+    signal a : std_logic_vector(C_block_size - 1 downto 0) := (others => '0');
+    signal b : std_logic_vector(C_block_size - 1 downto 0) := (others => '0');
+    signal M_bar : std_logic_vector(C_block_size - 1 downto 0) := (others => '0');
+    signal C_bar : std_logic_vector(C_block_size - 1 downto 0) := (others => '0');
 
     -- Make local signals for inputs
     signal s_message : std_logic_vector(C_block_size - 1 downto 0);
@@ -60,6 +63,7 @@ architecture rtl of montgomery_modexp2 is
     signal s_r_squared : std_logic_vector(C_block_size - 1 downto 0);
     signal s_n : std_logic_vector(C_block_size - 1 downto 0);
     signal s_n_prime : std_logic_vector(C_block_size - 1 downto 0);
+    signal s_msgin_last : std_logic;
 
     -- Monpro signals
     signal monpro_in_valid : std_logic;
@@ -125,12 +129,6 @@ begin
 
     begin
 
-        v_out_valid := '0';
-        v_in_ready := '0';
-
-        v_monpro_in_valid := '0';
-        v_monpro_out_ready := '0';
-
         --------------------------------------------------
     	if reset_n = '0' then
         --------------------------------------------------
@@ -147,6 +145,12 @@ begin
         --------------------------------------------------
       	elsif rising_edge(clk) then
         --------------------------------------------------
+
+            v_out_valid := '0';
+            v_in_ready := '0';
+
+            v_monpro_in_valid := '0';
+            v_monpro_out_ready := '0';
 
             --------------------------------------------------
             -- Finite State Machine
@@ -165,6 +169,8 @@ begin
                     C_bar <= (others => '0');
                     M_bar <= (others => '0');
 
+                    result <= (others => '0');
+
                     -- when modexp has valid data, load values and go to next state
                     if valid_in = '1' then 
 
@@ -177,6 +183,7 @@ begin
                         s_n <= n;
                         s_n_prime <= n_prime;
                         s_r_squared <= r_stuff;
+                        s_msgin_last <= msgin_last;
 
                         key_index <= leftmost_one_index(key);
 
@@ -320,11 +327,16 @@ begin
                         v_in_ready := '1';
                         v_out_valid := '0';
                     end if;
+
+                --------------------------------------------------
+                when others => state <= ST_IDLE;
+                --------------------------------------------------
                     
         	end case;
 
             valid_out <= v_out_valid;
             ready_in <= v_in_ready;
+            msgout_last <= s_msgin_last and v_out_valid;
 
             monpro_out_ready <= v_monpro_out_ready;
             monpro_in_valid <= v_monpro_in_valid;
