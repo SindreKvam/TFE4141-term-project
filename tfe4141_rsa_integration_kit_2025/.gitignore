@@ -11,3 +11,6 @@ RSA_soc/RSA_soc/
 sim_build/
 work/
 results.xml
+
+*.bda
+*.bxml
