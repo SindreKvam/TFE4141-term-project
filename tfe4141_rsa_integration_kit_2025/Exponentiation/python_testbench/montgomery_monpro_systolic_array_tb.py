@@ -71,33 +71,6 @@ async def test_loading_input(dut):
     dut._log.info(f"s_b_expected: {s_b_expected}")
 
 
-# @cocotb.parametrize(
-#     (
-#         "a",
-#         [
-#             LAB_INPUT_A,
-#             0x8ABE76B2CF6E603497A8BA867EDDC580B943F5690777E388FAE627E05449851A,
-#         ],
-#     )
-# )
-# @cocotb.parametrize(
-#     (
-#         "b",
-#         [
-#             LAB_INPUT_B,
-#             0x61DD65C6CF9D5CDAC7A55013F065678E4580B069817FA98DBB772EDA623B92FC,
-#         ],
-#     )
-# )
-# @cocotb.parametrize(
-#     (
-#         "result",
-#         [
-#             LAB_EXPECTED_RESULT,
-#             0x6261B7082F228B5C46106884D6ED9D3177D09D2DE0CA87FAE1E80AA5A0966312,
-#         ],
-#     )
-# )
 @cocotb.test()
 @cocotb.parametrize(
     test_data=[

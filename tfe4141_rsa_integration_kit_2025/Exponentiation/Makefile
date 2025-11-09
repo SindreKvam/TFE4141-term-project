@@ -16,10 +16,14 @@ VHDL_SOURCES += \
   $(SRC_DIR)/gamma.vhd \
   $(SRC_DIR)/gamma_final.vhd \
   $(SRC_DIR)/beta.vhd \
-  $(SRC_DIR)/montgomery_monpro_cios_systolic_array.vhd
+  $(SRC_DIR)/montgomery_monpro_cios_systolic_array.vhd \
+  $(SRC_DIR)/montgomery_modexp_2.vhd
 
-COCOTB_TOPLEVEL      := montgomery_monpro_cios_systolic_array
-COCOTB_TEST_MODULES  := montgomery_monpro_systolic_array_tb
+# COCOTB_TOPLEVEL      := montgomery_monpro_cios_systolic_array
+# COCOTB_TEST_MODULES  := montgomery_monpro_systolic_array_tb
+
+COCOTB_TOPLEVEL      := montgomery_modexp2
+COCOTB_TEST_MODULES  := montgomery_modexp_tb
 
 export PYTHONPATH := $(TB_DIR):$(PYTHONPATH)
 
