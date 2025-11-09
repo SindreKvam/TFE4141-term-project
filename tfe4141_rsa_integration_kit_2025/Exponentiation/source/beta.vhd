@@ -28,32 +28,34 @@ begin
     
     p_beta: process(clk, rst_n)
 
-        variable v_tmp_result : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
-        variable v_m : unsigned(GC_LIMB_WIDTH * 2 - 1 downto 0) := (others => '0');
+        variable v_tmp_result_sum : T_CARRY_SUM_ARRAY;
+        variable v_tmp_result_carry : T_CARRY_SUM_ARRAY;
 
     begin
 
-        v_tmp_result := (others => '0');
-        v_m := (others => '0');
-
         --------------------------------------------
-        if rst_n = '0' then
+        if rising_edge(clk) then
         --------------------------------------------
 
-            m <= (others => '0');
-            beta_carry <= (others => '0');
+            --------------------------------------------
+            if rst_n = '0' then
+            --------------------------------------------
 
-        --------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------
+                m <= (others => '0');
+                beta_carry <= (others => '0');
 
-            v_m := unsigned(sum_in) * unsigned(n_0_prime);
-            v_tmp_result := unsigned(sum_in) + unsigned(n_0) * unsigned(v_m(GC_LIMB_WIDTH - 1 downto 0));
-            
-            m <= std_logic_vector(v_m(GC_LIMB_WIDTH - 1 downto 0));
-            beta_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
+            --------------------------------------------
+            else
+            --------------------------------------------
 
-        --------------------------------------------
+                v_tmp_result_sum := carry_sum((others => '0'), sum_in, n_0_prime, (others => '0'));
+                v_tmp_result_carry := carry_sum(sum_in, n_0, v_tmp_result_sum(1), (others => '0'));
+
+                m <= v_tmp_result_sum(1);
+                beta_carry <= v_tmp_result_carry(0);
+
+            --------------------------------------------
+            end if;
         end if;
     end process p_beta;
     
