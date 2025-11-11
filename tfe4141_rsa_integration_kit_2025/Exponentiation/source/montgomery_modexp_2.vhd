@@ -7,7 +7,8 @@ use work.montgomery_pkg.all;
 entity montgomery_modexp2 is
     generic (
 		C_block_size : integer := 256;
-		GC_LIMB_WIDTH : integer := 32
+		GC_LIMB_WIDTH : integer := 32;
+        GC_TAG_LENGTH : integer := 8
 	);
 	port (
 		clk 		: in STD_LOGIC;
@@ -25,6 +26,9 @@ entity montgomery_modexp2 is
 		key 		: in STD_LOGIC_VECTOR( C_block_size-1 downto 0 ); -- e or d (encrypt or decrypt)
     --------------------------------------------------
 		result 		: out STD_LOGIC_VECTOR(C_block_size-1 downto 0) := (others => '0');
+    --------------------------------------------------
+        msg_tag_in  : in STD_LOGIC_VECTOR(GC_TAG_LENGTH - 1 downto 0) := (others => '0'); -- Tags to track order of messages
+        msg_tag_out : out STD_LOGIC_VECTOR(GC_TAG_LENGTH - 1 downto 0) := (others => '0');
     --------------------------------------------------
 		r_stuff 	: in STD_LOGIC_VECTOR(C_block_size-1 downto 0); --r^2 % n precalculated 
         n   : in STD_LOGIC_VECTOR(C_block_size-1 downto 0);
@@ -64,6 +68,7 @@ architecture rtl of montgomery_modexp2 is
     signal s_n : std_logic_vector(C_block_size - 1 downto 0);
     signal s_n_prime : std_logic_vector(C_block_size - 1 downto 0);
     signal s_msgin_last : std_logic;
+    signal s_msg_tag : std_logic_vector(GC_TAG_LENGTH - 1 downto 0);
 
     -- Monpro signals
     signal monpro_in_valid : std_logic;
@@ -135,6 +140,7 @@ begin
 
             -- Result is 0
         	result <= (others => '0');
+            msg_tag_out <= (others => '0');
 
             -- Reset counters
             key_index <= C_block_size - 1;
@@ -184,6 +190,7 @@ begin
                         s_n_prime <= n_prime;
                         s_r_squared <= r_stuff;
                         s_msgin_last <= msgin_last;
+                        s_msg_tag <= msg_tag_in;
 
                         key_index <= leftmost_one_index(key);
 
@@ -337,6 +344,7 @@ begin
             valid_out <= v_out_valid;
             ready_in <= v_in_ready;
             msgout_last <= s_msgin_last and v_out_valid;
+            msg_tag_out <= s_msg_tag when v_out_valid = '1' else (others => '0');
 
             monpro_out_ready <= v_monpro_out_ready;
             monpro_in_valid <= v_monpro_in_valid;
