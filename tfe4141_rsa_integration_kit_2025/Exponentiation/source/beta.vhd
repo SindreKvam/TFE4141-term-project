@@ -28,8 +28,11 @@ begin
     
     p_beta: process(clk, rst_n)
 
-        variable v_tmp_result_sum : T_CARRY_SUM_ARRAY;
-        variable v_tmp_result_carry : T_CARRY_SUM_ARRAY;
+        variable v_tmp_result_mult : unsigned(2 * GC_LIMB_WIDTH - 1 downto 0);
+        variable v_m : unsigned(GC_LIMB_WIDTH - 1 downto 0);
+
+        variable v_tmp_result_mult2 : unsigned(2 * GC_LIMB_WIDTH - 1 downto 0);
+        variable v_tmp_result_carry : unsigned(2 * GC_LIMB_WIDTH - 1 downto 0);
 
     begin
 
@@ -48,11 +51,14 @@ begin
             else
             --------------------------------------------
 
-                v_tmp_result_sum := carry_sum((others => '0'), sum_in, n_0_prime, (others => '0'));
-                v_tmp_result_carry := carry_sum(sum_in, n_0, v_tmp_result_sum(1), (others => '0'));
+                v_tmp_result_mult := unsigned(sum_in) * unsigned(n_0_prime);
+                v_m := v_tmp_result_mult(GC_LIMB_WIDTH - 1 downto 0);
 
-                m <= v_tmp_result_sum(1);
-                beta_carry <= v_tmp_result_carry(0);
+                v_tmp_result_mult2 := unsigned(n_0) * v_m;
+                v_tmp_result_carry := resize(unsigned(sum_in), 2 * GC_LIMB_WIDTH) + v_tmp_result_mult2;
+
+                beta_carry <= std_logic_vector(v_tmp_result_carry(2*GC_LIMB_WIDTH - 1 downto GC_LIMB_WIDTH));
+                m <= std_logic_vector(v_m);
 
             --------------------------------------------
             end if;
