@@ -290,7 +290,7 @@ begin
         v_valid_out := '0';
         v_result := (others => '0');
         v_msgout_last := '0';
-        v_output_core := '0';
+        v_output_core := 0;
 
         for i in 0 to GC_NUM_CORES - 1 loop
             v_ready_out_array(i) := '0';
