@@ -178,201 +178,206 @@ begin
     begin
 
         --------------------------------------------------
-        -- If reset is set
+        if rising_edge(clk) then
         --------------------------------------------------
-        if rst_n = '0' then
-        --------------------------------------------------
-
-            -- Reset loaded input values
-            s_a <= (others => (others => '0'));
-            s_b <= (others => (others => '0'));
-            s_n <= (others => (others => '0'));
-            s_n_whole <= (others => '0');
-            s_n_prime <= (others => '0');
-
-            -- Reset state machine
-            state <= ST_IDLE;
-
-            -- Reset counters
-            instruction_counter <= 0;
-
-            alpha_1_b_counter <= 0;
-            alpha_2_b_counter <= 0;
-            alpha_3_b_counter <= 0;
-
-            active_beta_counter <= 0;
-
-            gamma_1_beta_m_counter <= 0;
-            gamma_2_beta_m_counter <= 0;
-            gamma_3_beta_m_counter <= 0;
-
-        --------------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------------
-
-            -- Reset all variables
-            v_out_valid := '0';
-            v_in_ready := '0';
-            v_capture := '0';
-
-            previous_out_gamma_final_sum_2 <= out_gamma_final_sum_2;
 
             --------------------------------------------------
-            -- Finite State Machine
+            -- If reset is set
             --------------------------------------------------
-            case state is
-                --------------------------------------------------
-                -- Wait for input data to be valid
-                -- Once valid, load input values to registers.
-                --------------------------------------------------
-                when ST_IDLE =>
-                --------------------------------------------------
-                    v_in_ready := '1';
+            if rst_n = '0' then
+            --------------------------------------------------
 
-                    if in_valid = '1' then
+                -- Reset loaded input values
+                s_a <= (others => (others => '0'));
+                s_b <= (others => (others => '0'));
+                s_n <= (others => (others => '0'));
+                s_n_whole <= (others => '0');
+                s_n_prime <= (others => '0');
 
-                        -- Load input to registers
-                        for i in 0 to GC_NUM_LIMBS - 1 loop
-                            s_a(i) <= a((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
-                            s_b(i) <= b((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
-                            s_n(i) <= n((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
-                        end loop;
+                -- Reset state machine
+                state <= ST_IDLE;
 
-                        s_n_whole <= n;
-                        s_n_prime <= n_prime;
+                -- Reset counters
+                instruction_counter <= 0;
 
-                        -- Reset counters to be used
-                        instruction_counter <= 1;
-                        alpha_1_b_counter <= 0;
-                        alpha_2_b_counter <= 0;
-                        alpha_3_b_counter <= 0;
+                alpha_1_b_counter <= 0;
+                alpha_2_b_counter <= 0;
+                alpha_3_b_counter <= 0;
 
-                        active_beta_counter <= 0;
-                        gamma_1_beta_m_counter <= 0;
-                        gamma_2_beta_m_counter <= 0;
-                        gamma_3_beta_m_counter <= 0;
+                active_beta_counter <= 0;
 
-                        instruction <= instruction_set(0);
+                gamma_1_beta_m_counter <= 0;
+                gamma_2_beta_m_counter <= 0;
+                gamma_3_beta_m_counter <= 0;
 
-                        v_in_ready := '0';
-                        state <= ST_CALC;
+            --------------------------------------------------
+            else
+            --------------------------------------------------
 
-                    end if;
+                -- Reset all variables
+                v_out_valid := '0';
+                v_in_ready := '0';
+                v_capture := '0';
+
+                previous_out_gamma_final_sum_2 <= out_gamma_final_sum_2;
 
                 --------------------------------------------------
-                when ST_CALC =>
+                -- Finite State Machine
                 --------------------------------------------------
-
+                case state is
                     --------------------------------------------------
-                    -- Go through the entire instruction set
+                    -- Wait for input data to be valid
+                    -- Once valid, load input values to registers.
                     --------------------------------------------------
-                    instruction <= instruction_set(instruction_counter);
-
-                    if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 1 then
-                        state <= ST_CHECK_RESULT;
-                        instruction_counter <= 0;
-                    else
-                        instruction_counter <= instruction_counter + 1;
-                    end if;
-
+                    when ST_IDLE =>
                     --------------------------------------------------
-                    -- Handle the counter for the input b
-                    --------------------------------------------------
-                    if instruction_counter mod 3 = 0 and instruction_counter /= 0 then
-
-                        if alpha_1_b_counter < GC_NUM_LIMBS - 1 then
-                            alpha_1_b_counter <= alpha_1_b_counter + 1;
-                        end if;
-
-                        if alpha_1_b_counter >= 1 and alpha_2_b_counter < GC_NUM_LIMBS - 1 then
-                            alpha_2_b_counter <= alpha_2_b_counter + 1;
-                        end if;
-
-                        if alpha_2_b_counter >= 1 and alpha_3_b_counter < GC_NUM_LIMBS - 1 then
-                            alpha_3_b_counter <= alpha_3_b_counter + 1;
-                        end if;
-
-                    end if;
-
-                    --------------------------------------------------
-                    -- Handle the counters to store beta_m values
-                    --------------------------------------------------
-                    if instruction_counter mod 3 = 0 and instruction_counter /= 0 and active_beta_counter <= GC_NUM_LIMBS - 1 then
-
-                        if active_beta_counter < GC_NUM_LIMBS then
-                            beta_m(active_beta_counter) <= out_beta_m;
-                        end if;
-
-                        if active_beta_counter < GC_NUM_LIMBS and active_beta_counter < GC_NUM_LIMBS then
-                            active_beta_counter <= active_beta_counter + 1;
-                        end if;
-
-                    end if;
-
-                    --------------------------------------------------
-                    -- Handle the gamma_beta_m counters
-                    --------------------------------------------------
-                    if instruction_counter mod 3 = 0 then
-
-                        if gamma_1_beta_m_counter < GC_NUM_LIMBS - 1 then
-                            gamma_1_beta_m_counter <= gamma_1_beta_m_counter + 1;
-                        end if;
-
-                        if gamma_1_beta_m_counter >= 1 and gamma_2_beta_m_counter < GC_NUM_LIMBS - 1 then
-                            gamma_2_beta_m_counter <= gamma_2_beta_m_counter + 1;
-                        end if;
-
-                        if gamma_2_beta_m_counter >= 1 and gamma_3_beta_m_counter < GC_NUM_LIMBS - 1 then
-                            gamma_3_beta_m_counter <= gamma_3_beta_m_counter + 1;
-                        end if;
-
-                    end if;
-
-                    --------------------------------------------------
-                    -- Handle when to capture the values that should be on the output
-                    --------------------------------------------------
-                    if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 9 then
-                        v_capture := '1';
-                    end if;
-
-
-                --------------------------------------------------
-                when ST_CHECK_RESULT =>
-                --------------------------------------------------
-
-                    if unsigned(t(GC_NUM_LIMBS - 1)) > unsigned(s_n(GC_NUM_LIMBS - 1)) then
-                        u <= std_logic_vector(unsigned(s_u) - unsigned(s_n_whole));
-                    else
-                        u <= s_u;
-                    end if;
-
-                    v_out_valid := '1';
-                    state <= ST_HOLD;
-
-
-                --------------------------------------------------
-                when ST_HOLD =>
-                --------------------------------------------------
-
-                    v_out_valid := '1';
-
-                    if out_ready = '1' then
-                        state <= ST_IDLE;
                         v_in_ready := '1';
-                        v_out_valid := '0';
-                    end if;
 
-                --------------------------------------------------
-                when others => state <= ST_IDLE;
-                --------------------------------------------------
-            end case;
-            
-            out_valid <= v_out_valid;
-            in_ready <= v_in_ready;
-            capture <= v_capture;
+                        if in_valid = '1' then
 
-                        
-        end if; -- rising_edge
+                            -- Load input to registers
+                            for i in 0 to GC_NUM_LIMBS - 1 loop
+                                s_a(i) <= a((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                                s_b(i) <= b((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                                s_n(i) <= n((GC_LIMB_WIDTH + (i * GC_LIMB_WIDTH) - 1) downto (i * GC_LIMB_WIDTH));
+                            end loop;
+
+                            s_n_whole <= n;
+                            s_n_prime <= n_prime;
+
+                            -- Reset counters to be used
+                            instruction_counter <= 1;
+                            alpha_1_b_counter <= 0;
+                            alpha_2_b_counter <= 0;
+                            alpha_3_b_counter <= 0;
+
+                            active_beta_counter <= 0;
+                            gamma_1_beta_m_counter <= 0;
+                            gamma_2_beta_m_counter <= 0;
+                            gamma_3_beta_m_counter <= 0;
+
+                            instruction <= instruction_set(0);
+
+                            v_in_ready := '0';
+                            state <= ST_CALC;
+
+                        end if;
+
+                    --------------------------------------------------
+                    when ST_CALC =>
+                    --------------------------------------------------
+
+                        --------------------------------------------------
+                        -- Go through the entire instruction set
+                        --------------------------------------------------
+                        instruction <= instruction_set(instruction_counter);
+
+                        if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 1 then
+                            state <= ST_CHECK_RESULT;
+                            instruction_counter <= 0;
+                        else
+                            instruction_counter <= instruction_counter + 1;
+                        end if;
+
+                        --------------------------------------------------
+                        -- Handle the counter for the input b
+                        --------------------------------------------------
+                        if instruction_counter mod 3 = 0 and instruction_counter /= 0 then
+
+                            if alpha_1_b_counter < GC_NUM_LIMBS - 1 then
+                                alpha_1_b_counter <= alpha_1_b_counter + 1;
+                            end if;
+
+                            if alpha_1_b_counter >= 1 and alpha_2_b_counter < GC_NUM_LIMBS - 1 then
+                                alpha_2_b_counter <= alpha_2_b_counter + 1;
+                            end if;
+
+                            if alpha_2_b_counter >= 1 and alpha_3_b_counter < GC_NUM_LIMBS - 1 then
+                                alpha_3_b_counter <= alpha_3_b_counter + 1;
+                            end if;
+
+                        end if;
+
+                        --------------------------------------------------
+                        -- Handle the counters to store beta_m values
+                        --------------------------------------------------
+                        if instruction_counter mod 3 = 0 and instruction_counter /= 0 and active_beta_counter <= GC_NUM_LIMBS - 1 then
+
+                            if active_beta_counter < GC_NUM_LIMBS then
+                                beta_m(active_beta_counter) <= out_beta_m;
+                            end if;
+
+                            if active_beta_counter < GC_NUM_LIMBS and active_beta_counter < GC_NUM_LIMBS then
+                                active_beta_counter <= active_beta_counter + 1;
+                            end if;
+
+                        end if;
+
+                        --------------------------------------------------
+                        -- Handle the gamma_beta_m counters
+                        --------------------------------------------------
+                        if instruction_counter mod 3 = 0 then
+
+                            if gamma_1_beta_m_counter < GC_NUM_LIMBS - 1 then
+                                gamma_1_beta_m_counter <= gamma_1_beta_m_counter + 1;
+                            end if;
+
+                            if gamma_1_beta_m_counter >= 1 and gamma_2_beta_m_counter < GC_NUM_LIMBS - 1 then
+                                gamma_2_beta_m_counter <= gamma_2_beta_m_counter + 1;
+                            end if;
+
+                            if gamma_2_beta_m_counter >= 1 and gamma_3_beta_m_counter < GC_NUM_LIMBS - 1 then
+                                gamma_3_beta_m_counter <= gamma_3_beta_m_counter + 1;
+                            end if;
+
+                        end if;
+
+                        --------------------------------------------------
+                        -- Handle when to capture the values that should be on the output
+                        --------------------------------------------------
+                        if instruction_counter >= C_NUMBER_OF_INSTRUCTIONS - 9 then
+                            v_capture := '1';
+                        end if;
+
+
+                    --------------------------------------------------
+                    when ST_CHECK_RESULT =>
+                    --------------------------------------------------
+
+                        if unsigned(t(GC_NUM_LIMBS - 1)) > unsigned(s_n(GC_NUM_LIMBS - 1)) then
+                            u <= std_logic_vector(unsigned(s_u) - unsigned(s_n_whole));
+                        else
+                            u <= s_u;
+                        end if;
+
+                        v_out_valid := '1';
+                        state <= ST_HOLD;
+
+
+                    --------------------------------------------------
+                    when ST_HOLD =>
+                    --------------------------------------------------
+
+                        v_out_valid := '1';
+
+                        if out_ready = '1' then
+                            state <= ST_IDLE;
+                            v_in_ready := '1';
+                            v_out_valid := '0';
+                        end if;
+
+                    --------------------------------------------------
+                    when others => state <= ST_IDLE;
+                    --------------------------------------------------
+                end case;
+                
+                out_valid <= v_out_valid;
+                in_ready <= v_in_ready;
+                capture <= v_capture;
+
+                            
+            end if; -- rising_edge
+        end if;
 
     end process monpro_proc;
 
@@ -392,14 +397,20 @@ begin
     p_capture_output: process(clk)
     begin
 
+        --------------------------------------------
         if rising_edge(clk) then
+        --------------------------------------------
 
+            --------------------------------------------
             if rst_n = '0' then
+            --------------------------------------------
 
                 capture_counter <= 0;
                 t <= (others => (others => '0'));
             
+            --------------------------------------------
             else
+            --------------------------------------------
 
                 if state <= ST_CALC then
 

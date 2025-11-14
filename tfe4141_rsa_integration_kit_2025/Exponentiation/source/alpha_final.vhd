@@ -33,23 +33,28 @@ begin
 
         v_tmp_result := (others => '0');
 
-        --------------------------------------------
-        if rst_n = '0' then
-        --------------------------------------------
+        --------------------------------------------------
+        if rising_edge(clk) then
+        --------------------------------------------------
 
-            alpha_carry <= (others => '0');
-            alpha_sum <= (others => '0');
+            --------------------------------------------------
+            if rst_n = '0' then
+            --------------------------------------------------
 
-        --------------------------------------------
-        elsif rising_edge(clk) then
-        --------------------------------------------
+                alpha_carry <= (others => '0');
+                alpha_sum <= (others => '0');
 
-            v_tmp_result := resize(unsigned(carry_in) + unsigned(sum_in), v_tmp_result'length);
-            
-            alpha_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
-            alpha_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
+            --------------------------------------------------
+            else
+            --------------------------------------------------
 
-        --------------------------------------------
+                v_tmp_result := resize(unsigned(carry_in) + unsigned(sum_in), v_tmp_result'length);
+                
+                alpha_carry <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH * 2 - 1 downto GC_LIMB_WIDTH));
+                alpha_sum <= std_logic_vector(v_tmp_result(GC_LIMB_WIDTH - 1 downto 0));
+
+            --------------------------------------------------
+            end if;
         end if;
     end process p_alpha_final;
     

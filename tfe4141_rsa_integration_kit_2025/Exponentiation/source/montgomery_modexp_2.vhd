@@ -135,221 +135,226 @@ begin
     begin
 
         --------------------------------------------------
-    	if reset_n = '0' then
+        if rising_edge(clk) then
         --------------------------------------------------
-
-            -- Result is 0
-        	result <= (others => '0');
-            msg_tag_out <= (others => '0');
-
-            -- Reset counters
-            key_index <= C_block_size - 1;
-
-            -- Reset state
-            state <= ST_IDLE;
-
-        --------------------------------------------------
-      	elsif rising_edge(clk) then
-        --------------------------------------------------
-
-            v_out_valid := '0';
-            v_in_ready := '0';
-
-            v_monpro_in_valid := '0';
-            v_monpro_out_ready := '0';
 
             --------------------------------------------------
-            -- Finite State Machine
+            if reset_n = '0' then
             --------------------------------------------------
-        	case state is
+
+                -- Result is 0
+                result <= (others => '0');
+                msg_tag_out <= (others => '0');
+
+                -- Reset counters
+                key_index <= C_block_size - 1;
+
+                -- Reset state
+                state <= ST_IDLE;
+
+            --------------------------------------------------
+            else
+            --------------------------------------------------
+
+                v_out_valid := '0';
+                v_in_ready := '0';
+
+                v_monpro_in_valid := '0';
+                v_monpro_out_ready := '0';
 
                 --------------------------------------------------
-                -- Wait for top level to give message and key
+                -- Finite State Machine
                 --------------------------------------------------
-                when ST_IDLE =>
-                --------------------------------------------------
+                case state is
 
-                    v_in_ready := '1';
+                    --------------------------------------------------
+                    -- Wait for top level to give message and key
+                    --------------------------------------------------
+                    when ST_IDLE =>
+                    --------------------------------------------------
 
-                    -- Reset internal signals
-                    C_bar <= (others => '0');
-                    M_bar <= (others => '0');
-
-                    result <= (others => '0');
-
-                    -- when modexp has valid data, load values and go to next state
-                    if valid_in = '1' then 
-
-                        -- Calculate M_bar
-                        state <= ST_M_TO_MONTGOMERY;
-                        
-                        -- Load input values
-                        s_message <= message;
-                        s_key <= key;
-                        s_n <= n;
-                        s_n_prime <= n_prime;
-                        s_r_squared <= r_stuff;
-                        s_msgin_last <= msgin_last;
-                        s_msg_tag <= msg_tag_in;
-
-                        key_index <= leftmost_one_index(key);
-
-                        v_in_ready := '0';
-
-                    end if;
-            
-                --------------------------------------------------
-                -- Calculate monpro(M, r² mod n)
-                --------------------------------------------------
-                when ST_M_TO_MONTGOMERY =>
-                --------------------------------------------------
-
-                    a <= s_message;
-                    b <= s_r_squared;
-
-                    v_monpro_in_valid := '1';
-                    result_mux <= MUX_M_BAR;
-                    
-                    if monpro_in_ready = '1' then
-                        state <= ST_WAIT_FOR_MONPRO;
-                        next_state <= ST_C_TO_MONTGOMERY;
-                    end if;
-
-                --------------------------------------------------
-                -- Calculate monpro(C, r² mod n)
-                --------------------------------------------------
-                when ST_C_TO_MONTGOMERY =>
-                --------------------------------------------------
-
-                    a <= std_logic_vector(to_unsigned(1, C_block_size));
-                    b <= s_r_squared;
-
-                    v_monpro_in_valid := '1';
-                    result_mux <= MUX_C_BAR;
-
-                    if monpro_in_ready = '1' then
-                        state <= ST_WAIT_FOR_MONPRO;
-                        next_state <= ST_C_SQUARED;
-                    end if;
-
-                --------------------------------------------------
-                -- Calculate monpro(C_bar, C_bar)
-                --------------------------------------------------
-                when ST_C_SQUARED =>
-                --------------------------------------------------
-
-                    a <= C_bar;
-                    b <= C_bar;
-
-                    v_monpro_in_valid := '1';
-                    result_mux <= MUX_C_BAR;
-
-                    if monpro_in_ready = '1' then
-                        state <= ST_WAIT_FOR_MONPRO;
-
-                        if s_key(key_index) = '1' then
-                            next_state <= ST_M_TIMES_C;
-                        else
-                            next_state <= ST_C_SQUARED;
-                        end if;
-
-                        key_index <= key_index - 1;
-
-                    end if;
-
-                --------------------------------------------------
-                -- Calculate monpro(M_bar, C_bar)
-                --------------------------------------------------
-                when ST_M_TIMES_C =>
-                --------------------------------------------------
-
-                    a <= M_bar;
-                    b <= C_BAR;
-
-                    v_monpro_in_valid := '1';
-                    result_mux <= MUX_C_BAR;
-
-                    if monpro_in_ready = '1' then
-                        state <= ST_WAIT_FOR_MONPRO;
-
-                        -- The keys have to be odd values so on the last iteration
-                        -- M times C will always be ran, we can check this here.
-                        if key_index = -1 then
-                            next_state <= ST_RETURN;
-                        else
-                            next_state <= ST_C_SQUARED;
-                        end if;
-
-                    end if;
-
-                --------------------------------------------------
-                -- Calculate monpro(C_bar, 1)
-                --------------------------------------------------
-                when ST_RETURN =>
-                --------------------------------------------------
-
-                    a <= C_bar;
-                    b <= std_logic_vector(to_unsigned(1, C_block_size));
-
-                    v_monpro_in_valid := '1';
-                    result_mux <= MUX_RESULT;
-
-                    if monpro_in_ready = '1' then
-                        state <= ST_WAIT_FOR_MONPRO;
-                        next_state <= ST_HOLD;
-                    end if;
-
-                --------------------------------------------------
-                when ST_WAIT_FOR_MONPRO =>
-                --------------------------------------------------
-
-                    v_monpro_out_ready := '1';
-
-                    if monpro_out_valid = '1' then
-
-                        -- Load output value
-                        case result_mux is
-                            when MUX_C_BAR => C_bar <= monpro_data;
-                            when MUX_M_BAR => M_bar <= monpro_data;
-                            when MUX_RESULT => 
-
-                                result <= monpro_data;
-                                v_out_valid := '1';
-
-                            when others =>
-                        end case;
-
-                        state <= next_state;
-
-                    end if;
-
-                --------------------------------------------------
-                when ST_HOLD =>
-                --------------------------------------------------
-
-                    v_out_valid := '1';
-
-                    if ready_out = '1' then
-                        state <= ST_IDLE;
                         v_in_ready := '1';
-                        v_out_valid := '0';
-                    end if;
 
-                --------------------------------------------------
-                when others => state <= ST_IDLE;
-                --------------------------------------------------
-                    
-        	end case;
+                        -- Reset internal signals
+                        C_bar <= (others => '0');
+                        M_bar <= (others => '0');
 
-            valid_out <= v_out_valid;
-            ready_in <= v_in_ready;
-            msgout_last <= s_msgin_last and v_out_valid;
-            msg_tag_out <= s_msg_tag when v_out_valid = '1' else (others => '0');
+                        result <= (others => '0');
 
-            monpro_out_ready <= v_monpro_out_ready;
-            monpro_in_valid <= v_monpro_in_valid;
+                        -- when modexp has valid data, load values and go to next state
+                        if valid_in = '1' then 
 
-      	end if;
+                            -- Calculate M_bar
+                            state <= ST_M_TO_MONTGOMERY;
+                            
+                            -- Load input values
+                            s_message <= message;
+                            s_key <= key;
+                            s_n <= n;
+                            s_n_prime <= n_prime;
+                            s_r_squared <= r_stuff;
+                            s_msgin_last <= msgin_last;
+                            s_msg_tag <= msg_tag_in;
+
+                            key_index <= leftmost_one_index(key);
+
+                            v_in_ready := '0';
+
+                        end if;
+                
+                    --------------------------------------------------
+                    -- Calculate monpro(M, r² mod n)
+                    --------------------------------------------------
+                    when ST_M_TO_MONTGOMERY =>
+                    --------------------------------------------------
+
+                        a <= s_message;
+                        b <= s_r_squared;
+
+                        v_monpro_in_valid := '1';
+                        result_mux <= MUX_M_BAR;
+                        
+                        if monpro_in_ready = '1' then
+                            state <= ST_WAIT_FOR_MONPRO;
+                            next_state <= ST_C_TO_MONTGOMERY;
+                        end if;
+
+                    --------------------------------------------------
+                    -- Calculate monpro(C, r² mod n)
+                    --------------------------------------------------
+                    when ST_C_TO_MONTGOMERY =>
+                    --------------------------------------------------
+
+                        a <= std_logic_vector(to_unsigned(1, C_block_size));
+                        b <= s_r_squared;
+
+                        v_monpro_in_valid := '1';
+                        result_mux <= MUX_C_BAR;
+
+                        if monpro_in_ready = '1' then
+                            state <= ST_WAIT_FOR_MONPRO;
+                            next_state <= ST_C_SQUARED;
+                        end if;
+
+                    --------------------------------------------------
+                    -- Calculate monpro(C_bar, C_bar)
+                    --------------------------------------------------
+                    when ST_C_SQUARED =>
+                    --------------------------------------------------
+
+                        a <= C_bar;
+                        b <= C_bar;
+
+                        v_monpro_in_valid := '1';
+                        result_mux <= MUX_C_BAR;
+
+                        if monpro_in_ready = '1' then
+                            state <= ST_WAIT_FOR_MONPRO;
+
+                            if s_key(key_index) = '1' then
+                                next_state <= ST_M_TIMES_C;
+                            else
+                                next_state <= ST_C_SQUARED;
+                            end if;
+
+                            key_index <= key_index - 1;
+
+                        end if;
+
+                    --------------------------------------------------
+                    -- Calculate monpro(M_bar, C_bar)
+                    --------------------------------------------------
+                    when ST_M_TIMES_C =>
+                    --------------------------------------------------
+
+                        a <= M_bar;
+                        b <= C_BAR;
+
+                        v_monpro_in_valid := '1';
+                        result_mux <= MUX_C_BAR;
+
+                        if monpro_in_ready = '1' then
+                            state <= ST_WAIT_FOR_MONPRO;
+
+                            -- The keys have to be odd values so on the last iteration
+                            -- M times C will always be ran, we can check this here.
+                            if key_index = -1 then
+                                next_state <= ST_RETURN;
+                            else
+                                next_state <= ST_C_SQUARED;
+                            end if;
+
+                        end if;
+
+                    --------------------------------------------------
+                    -- Calculate monpro(C_bar, 1)
+                    --------------------------------------------------
+                    when ST_RETURN =>
+                    --------------------------------------------------
+
+                        a <= C_bar;
+                        b <= std_logic_vector(to_unsigned(1, C_block_size));
+
+                        v_monpro_in_valid := '1';
+                        result_mux <= MUX_RESULT;
+
+                        if monpro_in_ready = '1' then
+                            state <= ST_WAIT_FOR_MONPRO;
+                            next_state <= ST_HOLD;
+                        end if;
+
+                    --------------------------------------------------
+                    when ST_WAIT_FOR_MONPRO =>
+                    --------------------------------------------------
+
+                        v_monpro_out_ready := '1';
+
+                        if monpro_out_valid = '1' then
+
+                            -- Load output value
+                            case result_mux is
+                                when MUX_C_BAR => C_bar <= monpro_data;
+                                when MUX_M_BAR => M_bar <= monpro_data;
+                                when MUX_RESULT => 
+
+                                    result <= monpro_data;
+                                    v_out_valid := '1';
+
+                                when others =>
+                            end case;
+
+                            state <= next_state;
+
+                        end if;
+
+                    --------------------------------------------------
+                    when ST_HOLD =>
+                    --------------------------------------------------
+
+                        v_out_valid := '1';
+
+                        if ready_out = '1' then
+                            state <= ST_IDLE;
+                            v_in_ready := '1';
+                            v_out_valid := '0';
+                        end if;
+
+                    --------------------------------------------------
+                    when others => state <= ST_IDLE;
+                    --------------------------------------------------
+                        
+                end case;
+
+                valid_out <= v_out_valid;
+                ready_in <= v_in_ready;
+                msgout_last <= s_msgin_last and v_out_valid;
+                msg_tag_out <= s_msg_tag when v_out_valid = '1' else (others => '0');
+
+                monpro_out_ready <= v_monpro_out_ready;
+                monpro_in_valid <= v_monpro_in_valid;
+
+            end if;
+        end if;
     end process;
 
 end architecture;
