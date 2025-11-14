@@ -205,7 +205,7 @@ begin
                 --------------------------------------------------
 
                     a <= s_message;
-                    b <= r_stuff;
+                    b <= s_r_squared;
 
                     v_monpro_in_valid := '1';
                     result_mux <= MUX_M_BAR;
@@ -222,7 +222,7 @@ begin
                 --------------------------------------------------
 
                     a <= std_logic_vector(to_unsigned(1, C_block_size));
-                    b <= r_stuff;
+                    b <= s_r_squared;
 
                     v_monpro_in_valid := '1';
                     result_mux <= MUX_C_BAR;
