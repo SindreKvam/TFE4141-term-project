@@ -193,5 +193,4 @@
 
 
 ##custom clocks
-
-#create_clock -period 12.000 -name clk -waveform {0.000 6.000} clk
+create_clock -period 10.000 -name clk -waveform {0.000 5.000} clk
