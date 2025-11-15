@@ -1,0 +1,228 @@
+{
+  "design": {
+    "design_info": {
+      "boundary_crc": "0xA1D6B2D18A2AFFBB",
+      "device": "xc7z020clg400-1",
+      "name": "beta_bd",
+      "rev_ctrl_bd_flag": "RevCtrlBdOff",
+      "synth_flow_mode": "Hierarchical",
+      "tool_version": "2024.1",
+      "validated": "true"
+    },
+    "design_tree": {
+      "xbip_multadd_0": "",
+      "mult_gen_0": ""
+    },
+    "ports": {
+      "sum_in": {
+        "type": "data",
+        "direction": "I",
+        "left": "31",
+        "right": "0",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": "undef",
+            "value_src": "default"
+          }
+        }
+      },
+      "n_0_prime": {
+        "type": "data",
+        "direction": "I",
+        "left": "31",
+        "right": "0",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": "undef",
+            "value_src": "default"
+          }
+        }
+      },
+      "n_0": {
+        "type": "data",
+        "direction": "I",
+        "left": "31",
+        "right": "0",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": "undef",
+            "value_src": "default"
+          }
+        }
+      },
+      "beta_carry": {
+        "type": "data",
+        "direction": "O",
+        "left": "63",
+        "right": "32",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": [
+              "xilinx.com:interface:datatypes:1.0 {",
+              "DATA {datatype {name {attribs {resolve_type immediate dependency {} format string minimum {} maximum {}} value data} bitwidth {attribs {resolve_type generated dependency bitwidth format long minimum",
+              "{} maximum {}} value 32} bitoffset {attribs {resolve_type immediate dependency {} format long minimum {} maximum {}} value 0} integer {signed {attribs {resolve_type generated dependency signed format",
+              "bool minimum {} maximum {}} value TRUE}}}} DATA_WIDTH 32",
+              "}"
+            ],
+            "value_src": "ip_prop"
+          }
+        }
+      },
+      "m": {
+        "type": "data",
+        "direction": "O",
+        "left": "31",
+        "right": "0",
+        "parameters": {
+          "LAYERED_METADATA": {
+            "value": [
+              "xilinx.com:interface:datatypes:1.0 {",
+              "DATA {datatype {name {attribs {resolve_type immediate dependency {} format string minimum {} maximum {}} value data} bitwidth {attribs {resolve_type generated dependency bitwidth format long minimum",
+              "{} maximum {}} value 32} bitoffset {attribs {resolve_type immediate dependency {} format long minimum {} maximum {}} value 0} integer {signed {attribs {resolve_type generated dependency signed format",
+              "bool minimum {} maximum {}} value FALSE}}}} DATA_WIDTH 32",
+              "}"
+            ],
+            "value_src": "ip_prop"
+          }
+        }
+      },
+      "CLK_0": {
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "beta_bd_CLK_0",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "200000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      }
+    },
+    "components": {
+      "xbip_multadd_0": {
+        "vlnv": "xilinx.com:ip:xbip_multadd:3.0",
+        "ip_revision": "20",
+        "xci_name": "beta_bd_xbip_multadd_0_1",
+        "xci_path": "ip/beta_bd_xbip_multadd_0_1/beta_bd_xbip_multadd_0_1.xci",
+        "inst_hier_path": "xbip_multadd_0",
+        "parameters": {
+          "c_a_type": {
+            "value": "1"
+          },
+          "c_a_width": {
+            "value": "32"
+          },
+          "c_ab_latency": {
+            "value": "-1"
+          },
+          "c_b_type": {
+            "value": "1"
+          },
+          "c_b_width": {
+            "value": "32"
+          },
+          "c_c_latency": {
+            "value": "-1"
+          },
+          "c_c_type": {
+            "value": "1"
+          },
+          "c_c_width": {
+            "value": "32"
+          },
+          "c_out_high": {
+            "value": "63"
+          },
+          "c_out_low": {
+            "value": "32"
+          }
+        }
+      },
+      "mult_gen_0": {
+        "vlnv": "xilinx.com:ip:mult_gen:12.0",
+        "ip_revision": "21",
+        "xci_name": "beta_bd_mult_gen_0_1",
+        "xci_path": "ip/beta_bd_mult_gen_0_1/beta_bd_mult_gen_0_1.xci",
+        "inst_hier_path": "mult_gen_0",
+        "parameters": {
+          "Multiplier_Construction": {
+            "value": "Use_Mults"
+          },
+          "OutputWidthHigh": {
+            "value": "31"
+          },
+          "PortAType": {
+            "value": "Unsigned"
+          },
+          "PortAWidth": {
+            "value": "32"
+          },
+          "PortBType": {
+            "value": "Unsigned"
+          },
+          "PortBWidth": {
+            "value": "32"
+          },
+          "Use_Custom_Output_Width": {
+            "value": "true"
+          }
+        }
+      }
+    },
+    "nets": {
+      "A_0_1": {
+        "ports": [
+          "sum_in",
+          "mult_gen_0/A",
+          "xbip_multadd_0/A"
+        ]
+      },
+      "B_0_1": {
+        "ports": [
+          "n_0_prime",
+          "mult_gen_0/B"
+        ]
+      },
+      "B_0_2": {
+        "ports": [
+          "n_0",
+          "xbip_multadd_0/B"
+        ]
+      },
+      "CLK_0_1": {
+        "ports": [
+          "CLK_0",
+          "mult_gen_0/CLK",
+          "xbip_multadd_0/CLK"
+        ]
+      },
+      "mult_gen_0_P": {
+        "ports": [
+          "mult_gen_0/P",
+          "m",
+          "xbip_multadd_0/C"
+        ]
+      },
+      "xbip_multadd_0_P": {
+        "ports": [
+          "xbip_multadd_0/P",
+          "beta_carry"
+        ]
+      }
+    }
+  }
+}

@@ -15,6 +15,13 @@ results.xml
 *.bda
 *.bxml
 
+*.xci
+*.xml
+*.ui
+sim/
+synth/
+*wrapper.vhd
+
 Bitfiles/
 Reports/
 
