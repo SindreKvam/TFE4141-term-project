@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xA1D6B2D18A2AFFBB",
+      "boundary_crc": "0xF55D2D1C35F05D37",
       "device": "xc7z020clg400-1",
       "name": "beta_bd",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
@@ -110,14 +110,23 @@
             "value_src": "default"
           }
         }
+      },
+      "CE_0": {
+        "type": "ce",
+        "direction": "I",
+        "parameters": {
+          "POLARITY": {
+            "value": "ACTIVE_HIGH"
+          }
+        }
       }
     },
     "components": {
       "xbip_multadd_0": {
         "vlnv": "xilinx.com:ip:xbip_multadd:3.0",
         "ip_revision": "20",
-        "xci_name": "beta_bd_xbip_multadd_0_1",
-        "xci_path": "ip/beta_bd_xbip_multadd_0_1/beta_bd_xbip_multadd_0_1.xci",
+        "xci_name": "beta_bd_xbip_multadd_0_0",
+        "xci_path": "ip/beta_bd_xbip_multadd_0_0/beta_bd_xbip_multadd_0_0.xci",
         "inst_hier_path": "xbip_multadd_0",
         "parameters": {
           "c_a_type": {
@@ -127,7 +136,7 @@
             "value": "32"
           },
           "c_ab_latency": {
-            "value": "-1"
+            "value": "0"
           },
           "c_b_type": {
             "value": "1"
@@ -136,7 +145,7 @@
             "value": "32"
           },
           "c_c_latency": {
-            "value": "-1"
+            "value": "0"
           },
           "c_c_type": {
             "value": "1"
@@ -155,15 +164,21 @@
       "mult_gen_0": {
         "vlnv": "xilinx.com:ip:mult_gen:12.0",
         "ip_revision": "21",
-        "xci_name": "beta_bd_mult_gen_0_1",
-        "xci_path": "ip/beta_bd_mult_gen_0_1/beta_bd_mult_gen_0_1.xci",
+        "xci_name": "beta_bd_mult_gen_0_0",
+        "xci_path": "ip/beta_bd_mult_gen_0_0/beta_bd_mult_gen_0_0.xci",
         "inst_hier_path": "mult_gen_0",
         "parameters": {
+          "ClockEnable": {
+            "value": "true"
+          },
           "Multiplier_Construction": {
             "value": "Use_Mults"
           },
           "OutputWidthHigh": {
             "value": "31"
+          },
+          "PipeStages": {
+            "value": "1"
           },
           "PortAType": {
             "value": "Unsigned"
@@ -184,13 +199,6 @@
       }
     },
     "nets": {
-      "A_0_1": {
-        "ports": [
-          "sum_in",
-          "mult_gen_0/A",
-          "xbip_multadd_0/A"
-        ]
-      },
       "B_0_1": {
         "ports": [
           "n_0_prime",
@@ -203,17 +211,29 @@
           "xbip_multadd_0/B"
         ]
       },
+      "CE_0_1": {
+        "ports": [
+          "CE_0",
+          "mult_gen_0/CE"
+        ]
+      },
       "CLK_0_1": {
         "ports": [
           "CLK_0",
-          "mult_gen_0/CLK",
-          "xbip_multadd_0/CLK"
+          "mult_gen_0/CLK"
         ]
       },
       "mult_gen_0_P": {
         "ports": [
           "mult_gen_0/P",
           "m",
+          "xbip_multadd_0/A"
+        ]
+      },
+      "sum_in_1": {
+        "ports": [
+          "sum_in",
+          "mult_gen_0/A",
           "xbip_multadd_0/C"
         ]
       },
