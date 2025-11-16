@@ -23,10 +23,10 @@ architecture tb of beta_tb is
     
 begin
     
-    DUT: entity work.beta
+    DUT: entity work.beta_bd_wrapper
         port map(
-            clk => clk,
-            rst_n => rst_n,
+            CLK_0 => clk,
+            CE_0 => rst_n,
             sum_in => sum_in,
             n_0 => n_0,
             n_0_prime => n_0_prime,

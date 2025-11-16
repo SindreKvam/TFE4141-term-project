@@ -695,13 +695,13 @@ begin
     --------------------------------------------------
 
     --------------------------------------------------
-    i_beta: entity work.beta(rtl)
-        generic map(
-            GC_LIMB_WIDTH => GC_LIMB_WIDTH
-        )
+    i_beta: entity work.beta_bd_wrapper
+        -- generic map(
+        --     GC_LIMB_WIDTH => GC_LIMB_WIDTH
+        -- )
         port map(
-            clk => clk,
-            rst_n => rst_n,
+            CLK_0 => clk,
+            CE_0 => rst_n,
             sum_in => in_beta_sum,
             n_0 => in_beta_n_0,
             n_0_prime => in_beta_n_0_prime,
