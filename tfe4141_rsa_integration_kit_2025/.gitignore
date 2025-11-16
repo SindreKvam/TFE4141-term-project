@@ -21,6 +21,8 @@ results.xml
 sim/
 synth/
 *wrapper.vhd
+ipshared/
+*.hwh
 
 Bitfiles/
 Reports/
